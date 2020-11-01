@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="局部光照," />
 
 
 
@@ -79,13 +79,21 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="SomeNotes">
-<meta property="og:url" content="https://chaosrings.github.io/index.html">
+<meta name="description" content="局部光照局部光照指的是只考虑光源与物体表面进行交互的着色模型，并不是精确的光照结果。实际上，物体表面不仅会接受来自光源的直接光照，还会受到来自其他物体的间接光照，因此，若是想得到物理正确的结果，需要在着色点的法线半球面进行积分运算求解渲染方程了）也就是$L_o&#x3D;\int_\Omega f_{brdf}(l,v)L_i(n ·l)^+d\omega$，在实时渲染中求解该方程是不现实的，所以需要寻求一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LocalIllumination">
+<meta property="og:url" content="https://chaosrings.github.io/2020/11/01/LocalIllumination/index.html">
 <meta property="og:site_name" content="SomeNotes">
+<meta property="og:description" content="局部光照局部光照指的是只考虑光源与物体表面进行交互的着色模型，并不是精确的光照结果。实际上，物体表面不仅会接受来自光源的直接光照，还会受到来自其他物体的间接光照，因此，若是想得到物理正确的结果，需要在着色点的法线半球面进行积分运算求解渲染方程了）也就是$L_o&#x3D;\int_\Omega f_{brdf}(l,v)L_i(n ·l)^+d\omega$，在实时渲染中求解该方程是不现实的，所以需要寻求一">
 <meta property="og:locale">
+<meta property="og:image" content="https://chaosrings.github.io/2020/11/01/LocalIllumination/PunctualAndArea.png">
+<meta property="og:image" content="https://chaosrings.github.io/2020/11/01/LocalIllumination/PunctualLightRoughnessSurface.png">
+<meta property="article:published_time" content="2020-11-01T03:40:14.000Z">
+<meta property="article:modified_time" content="2020-11-01T15:34:00.576Z">
 <meta property="article:author" content="chaosrings">
+<meta property="article:tag" content="局部光照">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chaosrings.github.io/2020/11/01/LocalIllumination/PunctualAndArea.png">
 
 
 
@@ -115,13 +123,13 @@
 
 
 
-  <link rel="canonical" href="https://chaosrings.github.io/"/>
+  <link rel="canonical" href="https://chaosrings.github.io/2020/11/01/LocalIllumination/"/>
 
 
 
 
 
-  <title>SomeNotes</title>
+  <title>LocalIllumination | SomeNotes</title>
   
 
 
@@ -140,8 +148,7 @@
     
   
 
-  <div class="container sidebar-position-left 
-  page-home">
+  <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -234,9 +241,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
 
@@ -266,9 +273,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/11/01/LocalIllumination/" itemprop="url">LocalIllumination</a></h1>
+          <h1 class="post-title" itemprop="name headline">LocalIllumination</h1>
         
 
         <div class="post-meta">
@@ -340,9 +345,7 @@
       
 
       
-        
-          
-            <h2 id="局部光照"><a href="#局部光照" class="headerlink" title="局部光照"></a>局部光照</h2><p>局部光照指的是只考虑光源与物体表面进行交互的着色模型，并不是精确的光照结果。实际上，物体表面不仅会接受来自光源的直接光照，还会受到来自其他物体的间接光照，因此，若是想得到物理正确的结果，需要在着色点的法线半球面进行积分运算求解渲染方程了）也就是$L_o=\int_\Omega f_{brdf}(l,v)L_i(n ·l)^+d\omega$，在实时渲染中求解该方程是不现实的，所以需要寻求一些看起来正确的近似方法。</p>
+        <h2 id="局部光照"><a href="#局部光照" class="headerlink" title="局部光照"></a>局部光照</h2><p>局部光照指的是只考虑光源与物体表面进行交互的着色模型，并不是精确的光照结果。实际上，物体表面不仅会接受来自光源的直接光照，还会受到来自其他物体的间接光照，因此，若是想得到物理正确的结果，需要在着色点的法线半球面进行积分运算求解渲染方程了）也就是$L_o=\int_\Omega f_{brdf}(l,v)L_i(n ·l)^+d\omega$，在实时渲染中求解该方程是不现实的，所以需要寻求一些看起来正确的近似方法。</p>
 <h2 id="精确光源-Punctual-Light-Source"><a href="#精确光源-Punctual-Light-Source" class="headerlink" title="精确光源(Punctual Light Source)"></a>精确光源(Punctual Light Source)</h2><p><img src="/2020/11/01/LocalIllumination/PunctualAndArea.png" alt="punctual"></p>
 <p>精确光源定义为立体角无限小的球面光源。在这无限小的立体角中，光线的radiance为$L_c$，定义其光源的颜色$c_{light}$为其垂直照射在反照率为$(1,1,1)$的Lambertian表面所得到的出射光radiance，即</p>
 <p>$c_{light}=\lim_{\Omega \to 0} \frac{1}{\pi}\int_\Omega L_cd\omega$。</p>
@@ -363,8 +366,6 @@
 <p>$\rho_{ss}$是表面材质属性中的反照率，irradiance $E$则可以通过积分计算：</p>
 <p>$E=\int_{l\in w_l} L_l(n·l)^+dl \approx \pi c_{light}(n·l_c)^+$</p>
 
-          
-        
       
     </div>
     
@@ -379,164 +380,36 @@
 
     <footer class="post-footer">
       
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/10/31/SphericalHarmonics/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="SomeNotes">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/10/31/SphericalHarmonics/" itemprop="url">球谐函数</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-10-31T15:44:13+08:00">
-                2020-10-31
-              </time>
-            
-
-            
-
-            
-          </span>
-
+        <div class="post-tags">
           
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/cgmath/" itemprop="url" rel="index">
-                    <span itemprop="name">cgmath</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
+            <a href="/tags/%E5%B1%80%E9%83%A8%E5%85%89%E7%85%A7/" rel="tag"># 局部光照</a>
           
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
         </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="从傅立叶级数说起"><a href="#从傅立叶级数说起" class="headerlink" title="从傅立叶级数说起"></a>从傅立叶级数说起</h2><p>在信号处理中常有用傅立叶变换把信号从时域转换到频域来进行分析和处理的做法，也就是将满足一定条件的周期函数$F(x)$，展开写成$F(x)=\sum_{-\infty}^{+\infty} a_k e^{jk(\frac{2\pi}{T})x}$，其中$a_k=\int_T F(x)e^{-jk(\frac{2\pi}{T})x}dx$，对于有解析式的函数$F(x)$求解级数项$a_k$并不困难，但现实中的绝大部分信号是没有解析解的。不过，$a_k$是一个与原函数$F(x)$相关的积分式，$F(x)$在任意$x_i$的函数值是可以得到的，因此我们可以通过数值积分来近似求解。</p>
-<h2 id="球谐函数"><a href="#球谐函数" class="headerlink" title="球谐函数"></a>球谐函数</h2><p>将定义在球面上的函数$F(\theta,\phi)$投影到以球谐函数为基的级数展开与此类似，只是定义域和基函数不一样。</p>
-<p>$F(\theta,\phi)$在球面的展开式为：</p>
-<p>$F(\theta,\phi)=\sum_{l=0}^{\infty}\sum_{m=-l}^{l}C_l^m Y_l^m(\theta,\phi)$</p>
-<p>$C_l^m$是球谐系数，$Y_l^m$为球谐函数，$C_l^m$相当于傅立叶变换中的$a_k$，这个系数的求解也与$a_k$类似</p>
-<p>$C_l^m=\int_S F(\theta,\phi)Y_l^m(\theta,\phi)d\omega$</p>
-<p>同样是个积分式，也是可以通过蒙特卡洛方法来进行积分的近似数值计算。</p>
-<p>$Y_l^m(\theta,\phi)$的解析式则比较复杂，这里就略过了）只要知道是定义在球面上的正交基集合，作用类似于$e^{-jk(\frac{2\pi}{T})x}$将函数展开为傅立叶级数，$l$值越大的球谐函数，包含的高频信息越多。</p>
-<h2 id="投影的意义"><a href="#投影的意义" class="headerlink" title="投影的意义"></a>投影的意义</h2><p>将一个可以得到数值解的函数$F(\theta,\phi)$投影的意义何在呢？我的理解是减少了存储数值解所需的空间，设想要存储来自天空的环境光，或是场景中某一点朝向任意方向的irradiance，若是存储为CubeMap，虽然可以保存比较高频的信息，但需要消耗大量的存储空间。而在不太需要高频信息的环境光和irradiance数值，在取$l=2$时就能得到不错的效果。在这些使用场景，就可以只存储基函数9x3channel,27个数值来重建光照信息。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
       
 
       
       
-        <div class="post-eof"></div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/10/31/SphericalHarmonics/" rel="next" title="球谐函数">
+                <i class="fa fa-chevron-left"></i> 球谐函数
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
       
     </footer>
   </div>
@@ -546,10 +419,11 @@
   </article>
 
 
-    
-  </section>
 
-  
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -557,6 +431,10 @@
 
 
           
+
+  
+
+
 
         </div>
         
@@ -577,8 +455,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -638,6 +525,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B1%80%E9%83%A8%E5%85%89%E7%85%A7"><span class="nav-number">1.</span> <span class="nav-text">局部光照</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B2%BE%E7%A1%AE%E5%85%89%E6%BA%90-Punctual-Light-Source"><span class="nav-number">2.</span> <span class="nav-text">精确光源(Punctual Light Source)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%A2%E7%A7%AF%E5%85%89-Area-Light-Source"><span class="nav-number">3.</span> <span class="nav-text">面积光(Area Light Source)</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
@@ -778,6 +681,10 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
 
   
 
@@ -835,26 +742,6 @@
   
 
   
-  
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Config({
-        tex2jax: {
-          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
-          processEscapes: true,
-          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-        }
-      });
-    </script>
-
-    <script type="text/x-mathjax-config">
-      MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax(), i;
-        for (i=0; i < all.length; i += 1) {
-          all[i].SourceElement().parentNode.className += ' has-jax';
-        }
-      });
-    </script>
-    <script type="text/javascript" src="//cdn.bootcss.com/mathjax/2.7.1/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
   
 
 
