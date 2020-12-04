@@ -79,17 +79,21 @@
 
 
 
-<meta name="description" content="从傅立叶级数说起在信号处理中常有用傅立叶变换把信号从时域转换到频域来进行分析和处理的做法，也就是将满足一定条件的周期函数$F(x)$，展开写成$F(x)&#x3D;\sum_{-\infty}^{+\infty} a_k e^{jk(\frac{2\pi}{T})x}$，其中$a_k&#x3D;\int_T F(x)e^{-jk(\frac{2\pi}{T})x}dx$，可以观察到，$a_k$是一个与原函数$F(x)">
+<meta name="description" content="镜面材质的全局光照实现方式大致也可以分为预计算和近似计算两种实现方式。 Localized Environment Maps在Unity被称作Reflection Probe。 这种实现方式的原理与局部光照中的Specular IBL十分类似，主要有两点不同： 1.Specular IBL采样radiance的贴图是全局的EnvMap，LocalizedEnvMap则是在指定空间区域（多为立方体）">
 <meta property="og:type" content="article">
-<meta property="og:title" content="球谐函数">
-<meta property="og:url" content="https://chaosrings.github.io/2020/10/31/SphericalHarmonics/index.html">
+<meta property="og:title" content="SpecularGlobalIllumination">
+<meta property="og:url" content="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/index.html">
 <meta property="og:site_name" content="SomeNotes">
-<meta property="og:description" content="从傅立叶级数说起在信号处理中常有用傅立叶变换把信号从时域转换到频域来进行分析和处理的做法，也就是将满足一定条件的周期函数$F(x)$，展开写成$F(x)&#x3D;\sum_{-\infty}^{+\infty} a_k e^{jk(\frac{2\pi}{T})x}$，其中$a_k&#x3D;\int_T F(x)e^{-jk(\frac{2\pi}{T})x}dx$，可以观察到，$a_k$是一个与原函数$F(x)">
+<meta property="og:description" content="镜面材质的全局光照实现方式大致也可以分为预计算和近似计算两种实现方式。 Localized Environment Maps在Unity被称作Reflection Probe。 这种实现方式的原理与局部光照中的Specular IBL十分类似，主要有两点不同： 1.Specular IBL采样radiance的贴图是全局的EnvMap，LocalizedEnvMap则是在指定空间区域（多为立方体）">
 <meta property="og:locale">
-<meta property="article:published_time" content="2020-10-31T07:44:13.692Z">
-<meta property="article:modified_time" content="2020-11-30T16:09:26.392Z">
+<meta property="og:image" content="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/LocalizedEnvMap.png">
+<meta property="og:image" content="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/ReflectionProxy.png">
+<meta property="og:image" content="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/PlanarReflection.png">
+<meta property="article:published_time" content="2020-12-02T13:33:07.219Z">
+<meta property="article:modified_time" content="2020-12-03T15:56:00.888Z">
 <meta property="article:author" content="chaosrings">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/LocalizedEnvMap.png">
 
 
 
@@ -119,13 +123,13 @@
 
 
 
-  <link rel="canonical" href="https://chaosrings.github.io/2020/10/31/SphericalHarmonics/"/>
+  <link rel="canonical" href="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/"/>
 
 
 
 
 
-  <title>球谐函数 | SomeNotes</title>
+  <title>SpecularGlobalIllumination | SomeNotes</title>
   
 
 
@@ -252,7 +256,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/10/31/SphericalHarmonics/">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="">
@@ -269,7 +273,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">球谐函数</h1>
+          <h1 class="post-title" itemprop="name headline">SpecularGlobalIllumination</h1>
         
 
         <div class="post-meta">
@@ -281,8 +285,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-10-31T15:44:13+08:00">
-                2020-10-31
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-12-02T21:33:07+08:00">
+                2020-12-02
               </time>
             
 
@@ -304,8 +308,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/cgmath/" itemprop="url" rel="index">
-                    <span itemprop="name">cgmath</span>
+                  <a href="/categories/Global-Illumination/" itemprop="url" rel="index">
+                    <span itemprop="name">Global Illumination</span>
                   </a>
                 </span>
 
@@ -341,15 +345,22 @@
       
 
       
-        <h2 id="从傅立叶级数说起"><a href="#从傅立叶级数说起" class="headerlink" title="从傅立叶级数说起"></a>从傅立叶级数说起</h2><p>在信号处理中常有用傅立叶变换把信号从时域转换到频域来进行分析和处理的做法，也就是将满足一定条件的周期函数$F(x)$，展开写成$F(x)=\sum_{-\infty}^{+\infty} a_k e^{jk(\frac{2\pi}{T})x}$，其中$a_k=\int_T F(x)e^{-jk(\frac{2\pi}{T})x}dx$，可以观察到，$a_k$是一个与原函数$F(x)$相关的积分式，而无论$F(x)$有没有解析式，我们既然得到了一个信号，那么它在任意$x_i$的函数值是可以得到的，因此可以通过数值积分来近似求解。</p>
-<h2 id="球谐函数"><a href="#球谐函数" class="headerlink" title="球谐函数"></a>球谐函数</h2><p>将定义在球面上的函数$F(\theta,\phi)$投影到以球谐函数为基的级数展开与此类似，只是定义域和基函数不一样。</p>
-<p>$F(\theta,\phi)$在球面的展开式为：</p>
-<p>$F(\theta,\phi)=\sum_{l=0}^{\infty}\sum_{m=-l}^{l}C_l^m Y_l^m(\theta,\phi)$</p>
-<p>$C_l^m$是球谐系数，$Y_l^m$为球谐函数，$C_l^m$相当于傅立叶变换中的$a_k$，这个系数的求解也与$a_k$类似</p>
-<p>$C_l^m=\int_S F(\theta,\phi)Y_l^m(\theta,\phi)d\omega$</p>
-<p>同样是个积分式，也是可以通过蒙特卡洛方法来进行积分的近似数值计算。</p>
-<p>$Y_l^m(\theta,\phi)$的解析式则比较复杂，这里就略过了）只要知道是定义在球面上的正交基集合，作用类似于$e^{-jk(\frac{2\pi}{T})x}$将函数展开为傅立叶级数，$l$值越大的球谐函数，包含的高频信息越多。</p>
-<h2 id="投影的意义"><a href="#投影的意义" class="headerlink" title="投影的意义"></a>投影的意义</h2><p>将一个可以得到数值解的函数$F(\theta,\phi)$投影的意义何在呢？我的理解是减少了存储数值解所需的空间，设想要存储来自天空的环境光，或是场景中某一点朝向任意方向的irradiance，若是存储为CubeMap，虽然可以保存比较高频的信息，但需要消耗大量的存储空间。而在不太需要高频信息的环境光和irradiance数值，在取$l=2$时就能得到不错的效果。在这些使用场景，就可以只存储基函数9x3channel,27个数值来重建光照信息。</p>
+        <p>镜面材质的全局光照实现方式大致也可以分为预计算和近似计算两种实现方式。</p>
+<h2 id="Localized-Environment-Maps"><a href="#Localized-Environment-Maps" class="headerlink" title="Localized Environment Maps"></a>Localized Environment Maps</h2><p>在Unity被称作Reflection Probe。</p>
+<p>这种实现方式的原理与局部光照中的Specular IBL十分类似，主要有两点不同：</p>
+<p>1.Specular IBL采样radiance的贴图是全局的EnvMap，LocalizedEnvMap则是在指定空间区域（多为立方体）内收集周围的radiance信息，在这个区域内的镜面材质物体着色才会使用这个LocalizedEnvMap。</p>
+<p><img src="/2020/12/02/SpecularGlobalIllumination/LocalizedEnvMap.png" alt="localizedEnvMap"></p>
+<p>2.Specular IBL中环境光被认为是从无穷远点入射到表面，因此直接使用视线反射向量来采样环境贴图并不会带来误差——相对于无穷远处，场景中的任意物体都可以视作在环境贴图的中心。但LocalizedEnvMap并不能这样处理，除非着色点正好位于作用区域的中心位置，越是偏离中心位置的着色点直接使用视线反射向量来采样LocalizedEnvMap产生的误差就会越大。</p>
+<p><img src="/2020/12/02/SpecularGlobalIllumination/ReflectionProxy.png" alt="reflectionProxy"></p>
+<p>采样LocalizedEnvMap向量的计算方式如右图，首先根据视线向量$v$以及着色点法线$n$计算反射向量$r$，计算$r$与作用区域几何体的交点$p$，最终的采样向量$r`$为作用区域中心到交点$p$的向量。</p>
+<p>除此之外，在Specular IBL中一些预处理的方法都可以用在LocalizedEnvMap，比如MipMap建立不同粗糙度的贴图，split-integral approximation等…</p>
+<h2 id="Planar-Reflections"><a href="#Planar-Reflections" class="headerlink" title="Planar Reflections"></a>Planar Reflections</h2><p><img src="/2020/12/02/SpecularGlobalIllumination/PlanarReflection.png" alt="planarReflection"></p>
+<p>当要渲染的物体是一个平面时，可以通过直接渲染场景中其他物体与此平面的镜像来模拟镜面材质，这种方法十分简单易于理解，不仅能渲染完美镜面的反射效果，也能模拟带有一定粗糙度的光泽表面。缺陷在于消耗很大，相当于场景中的物体要被渲染两次。</p>
+<h2 id="Screen-Space-Methods"><a href="#Screen-Space-Methods" class="headerlink" title="Screen Space Methods"></a>Screen Space Methods</h2><p>最常见的算法就是SSR以及基于这个算法的一系列改进和衍生算法。算法原理不难理解，大致的步骤为：</p>
+<p>1.根据视线向量和着色点法线计算反射向量$r$</p>
+<p>2.从着色点的空间位置（世界空间，视线空间，改进算法有投影到屏幕空间）开始，沿着反射向量$r$步进。</p>
+<p>3.根据步进后迭代点投影到屏幕空间的坐标$P_{screenSpace}^i$在深度缓存中采样，判断缓存的深度是否比采样点的深度小，若是则认为光线与物体产生了交点，用$P_{screenSpace}^i$采样颜色缓存，作为入射方向$-r$的radiance贡献；反之则继续迭代步骤2，直到脱离场景。</p>
+<p>原理虽然看起来比较简单，但如果就按这个思路去实现的话会发现效果几乎不能看，需要经过额外的优化算法才能有不错的效果，比如步进时不是每次增加固定长度而是二分查找，投影到屏幕空间进行迭代，对追踪起点做一些抖动…<br>有时间的话可以实现一下SSR算法。</p>
 
       
     </div>
@@ -374,14 +385,18 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2020/12/01/DiffuseGlobalIllumination/" rel="next" title="DiffuseGlobalIllumination">
+                <i class="fa fa-chevron-left"></i> DiffuseGlobalIllumination
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2020/11/01/PunctualAndAreaLightSource/" rel="prev" title="PunctualAndAreaLightSource">
-                PunctualAndAreaLightSource <i class="fa fa-chevron-right"></i>
+              <a href="/2020/12/04/SamplingInCG/" rel="prev" title="SamplingInCG">
+                SamplingInCG <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -505,7 +520,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E5%82%85%E7%AB%8B%E5%8F%B6%E7%BA%A7%E6%95%B0%E8%AF%B4%E8%B5%B7"><span class="nav-number">1.</span> <span class="nav-text">从傅立叶级数说起</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%90%83%E8%B0%90%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">球谐函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%95%E5%BD%B1%E7%9A%84%E6%84%8F%E4%B9%89"><span class="nav-number">3.</span> <span class="nav-text">投影的意义</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Localized-Environment-Maps"><span class="nav-number">1.</span> <span class="nav-text">Localized Environment Maps</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Planar-Reflections"><span class="nav-number">2.</span> <span class="nav-text">Planar Reflections</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Screen-Space-Methods"><span class="nav-number">3.</span> <span class="nav-text">Screen Space Methods</span></a></li></ol></div>
             
 
           </div>
