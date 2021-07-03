@@ -249,6 +249,549 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2021/06/27/SubstanceExplorer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/06/27/SubstanceExplorer/" itemprop="url">SubstanceExplorer</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-06-27T19:04:52+08:00">
+                2021-06-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/tools/" itemprop="url" rel="index">
+                    <span itemprop="name">tools</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Substance-Designer"><a href="#Substance-Designer" class="headerlink" title="Substance Designer"></a>Substance Designer</h1><p>在听过几场关于程序化内容生成的技术分享后，对PCG管线的工具链产生了一些兴趣，就尝试着学了一点Substance Designer。</p>
+<p>SD主要用于生成程序化的纹理贴图，在广泛使用的PBR着色模型下，SD通常会有下面四种输出：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDOutput.png"></p>
+<p>分别是基础色、法线贴图、粗糙度和金属度，与虚幻引擎的Metallic/Roughness工作流可以完美对接。</p>
+<p>SD的工作内容就是用数据流编程的方式来生成这些贴图，工具默认提供了很多方便使用的节点:</p>
+<p>最基础也是最常用的就是各种Generator了，用于生成各种类型的高度图：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDNodeTile.png"></p>
+<p>每种类型的节点都会提供很多参数供调节：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDNodeTileParam.png"></p>
+<p>调节旋转参数后可以生成这样的图案：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDNodeTileTrans.png"></p>
+<p>另一类则是运算节点，可以理解为都是Pixel Processor的子类：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDNodePS.png"></p>
+<p>Pixel Processor与渲染中的Fragment Shader十分类似，都是对所有像素执行一个函数，并输出结果。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">foreach pixel_in in input</span><br><span class="line">    pixel_out &#x3D; ProcessFunc(pixel_in1,pixel_in2...)</span><br></pre></td></tr></table></figure>
+
+<p>以节点Blend为例:</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDNodeBlend.png"></p>
+<p>这个节点的作用是将Background和Foreground通过操作参数(add,sub,multiply…)混合得到结果，Blend的ProcessFunc可以简单的表示为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ProcessFunc &#x3D; Background op (Foreground * Opacity)</span><br></pre></td></tr></table></figure>
+
+<p>类似的，Transformation 2D节点则是将输入的节点进行位置变换，可以进行旋转平移缩放等操作:</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDNodeTransform.png"></p>
+<p>其实就是对每一个像素进行了矩阵乘法：</p>
+<p>$P^·=Matrix_{transform} · P$</p>
+<p>这些节点类似于编程语言中的各种原子操作，实现这些基本原子后，就可以组合实现各种纹理。</p>
+<p>以一个最简单的金属材质为例：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDMetalGraph.png"></p>
+<p>这些节点组合就会生成这样一张污渍被刮花的金属贴图：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDOutputMetal.png"></p>
+<p>基础色直接用金属的颜色与噪声图进行混合，看起来就像是金属被氧化了。法线贴图则是用进行一些加减操作后的高度图来实现指定形状的图案。粗糙度贴图则是由一张噪声贴图减去高度图，这样做的话金属突出的部分粗糙度较低，比较符合暴露在外的金属经常被摩擦污渍较少，同时噪声中黑色的部分粗糙度也比较低，看起来就像是污渍被清掉了。</p>
+<p>这些数据流图也可以简单的用几句代码来描述：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">distanceMap &#x3D; DistanceMap(TileGenerator)</span><br><span class="line">rotate45 &#x3D; rotate(distanceMap)</span><br><span class="line">rotate_45 &#x3D; rotate(&quot;distanceMap)</span><br><span class="line">detailMap &#x3D; max(rotate45-rotate_45,0)</span><br><span class="line"></span><br><span class="line">BaseColor &#x3D; noise1*uniformColor*opacity;</span><br><span class="line">Normal &#x3D; detailMap</span><br><span class="line">Roughness &#x3D; noise2-detailMap*opacity</span><br><span class="line">Metallic &#x3D; 1</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="配合游戏引擎使用"><a href="#配合游戏引擎使用" class="headerlink" title="配合游戏引擎使用"></a>配合游戏引擎使用</h2><p>因为Unity2017和SD配合得不太好，最近也在学习UE相关知识，就用UE来配合使用了。</p>
+<p>SD中可以选择暴露想要在引擎里调节的参数：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDExposeParam.png"></p>
+<p>导出sbsar到引擎中就可以任意改变这个参数来生成不同的纹理：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/UEParam.png"></p>
+<p>下面就是distance参数被分别设置成1和3的结果。</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDD3.png"> </p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDD1.png"></p>
+<h2 id="一些思考"><a href="#一些思考" class="headerlink" title="一些思考"></a>一些思考</h2><p>Node-Based的图形化编程被广泛用于游戏开发的各个过程中，程序化内容生成工具如Houdini,Substance Designer都是基于此，游戏引擎中UE的材质编辑器和蓝图，Unity的ShaderGraph也都是用连连看的方式来实现功能。一方面图形化编程降低了门槛，不需要了解编程知识也可以做实际上写代码的工作，另一方面图形化后逻辑的可读性以及可维护性应该是不如程序代码的。<br>曾经在网上看到过这样精美的程序化纹理：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDComplexGraphOut.png"></p>
+<p>然而它的SD节点图是这样的：</p>
+<p><img src="/2021/06/27/SubstanceExplorer/SDComplexGraphNodes.png"></p>
+<p>将一些通用逻辑封装成块，或者用代码实现是不是更好的选择？</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2021/03/21/Synchronization/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/03/21/Synchronization/" itemprop="url">Synchronization</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-03-21T10:58:38+08:00">
+                2021-03-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/network/" itemprop="url" rel="index">
+                    <span itemprop="name">network</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="网络游戏同步"><a href="#网络游戏同步" class="headerlink" title="网络游戏同步"></a>网络游戏同步</h1><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p>网络游戏中，无论是多人pvp还是pve，都需要让所有玩家在除自己以外的玩家的客户端有表现，但由于网络延迟有可能会造成玩家游戏内容不同步，因此需要同步机制来确保所有玩家游戏内容的一致性。同步算法发展至今，大体可分为帧同步和状态同步两种方式。</p>
+<h2 id="帧同步"><a href="#帧同步" class="headerlink" title="帧同步"></a>帧同步</h2><p>帧同步也被称作lockstep，锁步同步，原理十分简单：</p>
+<p>相同的状态，接受相同的输入，执行相同的流程，到达新的相同状态。</p>
+<p>可以从一个回合制游戏初步理解一下：</p>
+<p><img src="/2021/03/21/Synchronization/lockstepPKM.mp4"></p>
+<p>视频来自于宝可梦剑盾的联机对战，可以看到，游戏的每个回合双方玩家需要做出输入（选择宝可梦释放技能，使用道具或者交换上场…），在对战的双方确定输入后才会播放技能演示，进行逻辑处理（造成伤害，添加buff/debuff效果）并将游戏进程推进到下一个回合。</p>
+<p>可以设想一下玩家可以控制宝可梦移动，不需要点选屏幕上的ui而是使用手柄按键来释放技能，做出输入的时间限制不是60秒而是60毫秒，游戏会变成什么样？显然，玩家移动摇杆后游戏内的角色能“立刻”走动，按下技能按钮也几乎能立刻看到技能效果，这也就是最原始的帧同步。</p>
+<p><img src="/2021/03/21/Synchronization/lockstepRaw.png"></p>
+<p>（顺带一提，暗黑破坏神2最开始也是设计成回合制游戏，后期通过减少回合的时长变成即时战斗）</p>
+<h3 id="如今的帧同步"><a href="#如今的帧同步" class="headerlink" title="如今的帧同步"></a>如今的帧同步</h3><p>经过多年的演化，现在的帧同步实现通常会设置一个转发服务器来接受所有客户端的指令，并下发数据包驱动客户端更新逻辑。</p>
+<p><img src="/2021/03/21/Synchronization/lockstepNow.png"></p>
+<p>一个简单的例子，假设我们需要进行同步的是一个坐标，客户端A,B都有相同的初始状态A(0,0) B(0,0)。客户端A短时间连续操作，向服务器发出了A坐标x+1,y+1的指令，B客户端则向服务器发送了B坐标x+1的指令。在帧同步服务器的第一个逻辑帧内，A(x+1),B(x+1)的指令被服务器收到，服务器在帧末尾向A，B两个客户端转发这两条指令，客户端接受到服务器的驱动更新指令后进行逻辑更新，进入到一个新的状态S1 [A(1,0),B(1,0)] ，可以看到，虽然AB两个客户端进入到S1状态的时间不一样，但最终在逻辑更新后会达到同样的状态。</p>
+<p>后续的逻辑帧更新类似，每一帧内服务器收到客户端的输入都会在帧末将这些指令转发到所有的客户端进行逻辑更新，如果游戏会在第N个逻辑帧结束，那么以这个算法来同步，可以保证AB两个客户端在所有的逻辑帧拥有相同的状态。</p>
+<h3 id="逻辑帧和渲染帧"><a href="#逻辑帧和渲染帧" class="headerlink" title="逻辑帧和渲染帧"></a>逻辑帧和渲染帧</h3><p>这里需要注意区分逻辑帧和渲染帧，帧同步通常会将逻辑与渲染分离，逻辑更新指的是更新游戏内各种可交互实体的属性，比如角色位置，血量，技能CD，子弹位置…而渲染更新则是将显卡渲染好的一帧图像输出到显示器上进行展示。</p>
+<p>为了让渲染帧的位置变化看起来顺畅自然，也需要使用一些预测算法，根据两个逻辑帧的状态插值过渡。人物运动行走有经典的航程算法(DeadRocking).</p>
+<h3 id="帧同步的优点"><a href="#帧同步的优点" class="headerlink" title="帧同步的优点"></a>帧同步的优点</h3><ul>
+<li>游戏逻辑没有服务器的概念，</li>
+<li>网络传输只需要传输指令，相比状态同步十分节省网络流量。</li>
+</ul>
+<h3 id="帧同步的缺点"><a href="#帧同步的缺点" class="headerlink" title="帧同步的缺点"></a>帧同步的缺点</h3><p>1.浮点数</p>
+<p>相同的初始化状态和每帧相同的输入是容易保证的，但代码接受到同样的输入后有同样的状态变化却不是那么简单。</p>
+<p>以根源的浮点数举例，不同平台的浮点数运算规则不一样，导致了物理引擎无法保证相同的物理逻辑更新在所有的客户端上有相同的结果，如果使用现成的物理引擎来实现帧同步游戏的物理计算，就很有可能违背代码接受到同样的输入后有同样的状态变化这一原则。</p>
+<p><img src="/2021/03/21/Synchronization/lockstepFloat.png"></p>
+<p>在windows和ubuntu平台下用同一份代码计算$x_{n+1}=f(x_n)=sin(x_n)$ 20次。</p>
+<p>2.难以断线重连</p>
+<p>帧同步的机制要求所有客户端都以初始状态从第一帧开始算，若玩家中途断线并且客户端没有了游戏当前的状态（杀进程），那么客户端需要从第一帧开始追帧，因为这个原因，帧同步也不太适合单局时长很长的游戏。</p>
+<p>3.无法实现MMO类游戏</p>
+<p><img src="/2021/03/21/Synchronization/StateSyncMMO.png"></p>
+<p>设想这样一个地图内可能有成百上千个玩家的MMORPG，在一帧内接受几百个输入并在客户端同时计算所有实体的游戏逻辑，无论是网络还是性能都是扛不住的。</p>
+<p>4.没有办法反全图挂</p>
+<p>虽然帧同步所有的逻辑都会运行在客户端，但一般的作弊帧同步也能够做得很好，可以看这篇文章</p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/34014063">帧同步中的反外挂</a></p>
+<p>大体的思路是服务器不仅承担收集转发指令的任务，还需要在游戏中或者结算的时候也运行游戏逻辑，来校验客户端的状态，不过因为单一的客户端拥有所有玩家的状态，面对全图挂是没有办法的。</p>
+<h2 id="快照同步"><a href="#快照同步" class="headerlink" title="快照同步"></a>快照同步</h2><p>快照同步，只在服务器运行游戏逻辑，服务器运算得到结果后向所有的客户端广播。在这种同步算法下，客户端只是一个向服务器发请求并展示结果的纯表现终端，也有人认为这也算做状态同步的一种。</p>
+<p><img src="/2021/03/21/Synchronization/StateSyncNoPre.mp4"></p>
+<p>游戏体验时，玩家输入指令后明显感受到一段时间后才会有技能动画。对游戏响应性要求不高的游戏，比如棋牌，回合制通常会采用这种同步策略。</p>
+<h2 id="状态同步"><a href="#状态同步" class="headerlink" title="状态同步"></a>状态同步</h2><p>帧同步通过同步操作，并根据操作进行相同的运算得到相同的结果，状态同步则直接同步状态。多数使用状态同步方案的游戏客户端和服务器都要运行游戏逻辑，不过客户端除了运行gameplay相关的逻辑还会有画面渲染，音效表现，服务器运行的是剔除了表现的纯逻辑。</p>
+<p>客户端有丰富的表现：人物、枪械、场景，DS上只有各种碰撞框。</p>
+<p>有预表现的状态同步的大致流程如下：</p>
+<ul>
+<li>接受到玩家的输入后，客户端直接执行逻辑代码。</li>
+<li>将运算的结果和玩家输入同时发送给服务器。</li>
+<li>服务器收到客户端的输入后执行与客户端相同的逻辑代码。</li>
+<li>服务器校验运算结果与客户端的运算结果，如果服务器与玩家客户端发送的运算结果一样，那么无事发生，如果不一样，服务器就会用服务器的运算结果修正客户端的状态。</li>
+<li>将服务器的运算结果推送给第三方客户端。</li>
+</ul>
+<p><img src="/2021/03/21/Synchronization/StateSyncPre.png"></p>
+<h3 id="状态同步的优点"><a href="#状态同步的优点" class="headerlink" title="状态同步的优点"></a>状态同步的优点</h3><ul>
+<li>相比帧同步需要等待服务器驱动，状态同步可以对输入做预表现，响应迅速。</li>
+<li>天然支持断线重连，DS上拥有所有的信息，断线后只需要将这些信息发送给客户端。</li>
+<li>性能优化容易，比如AI逻辑可以完全在DS上执行，客户端只需要表现位置变更动画表现以及放技能，一些复杂的逻辑也可以放在DS上做，客户端只做表现。</li>
+</ul>
+<h3 id="状态同步的缺点"><a href="#状态同步的缺点" class="headerlink" title="状态同步的缺点"></a>状态同步的缺点</h3><ul>
+<li>流量较大，相比简单传输指令的帧同步，传输状态信息显然是需要更大的网络流量。</li>
+<li>开发效率较低，每一个gameplay玩法都需要考虑客户端该怎么做，ds该怎么做，是否需要额外同步。</li>
+<li>服务器开销较大，服务器通常要跑所有的游戏逻辑。</li>
+</ul>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/12/07/LightScattering/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/12/07/LightScattering/" itemprop="url">LightScattering</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-12-07T23:36:26+08:00">
+                2020-12-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Volumetric-Rendering/" itemprop="url" rel="index">
+                    <span itemprop="name">Volumetric Rendering</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Participating-Media-Material"><a href="#Participating-Media-Material" class="headerlink" title="Participating Media Material"></a>Participating Media Material</h2><p>光的散射主要出现在参与介质的渲染中，关注点在于光子与组成参与介质的粒子进行交互的结果。光子在传播过程中遇到参与介质时，会有四种情况：</p>
+<p><img src="/source/_posts/LightScattering/EventsInMedia.png" alt="EventsInMedia"></p>
+<p>a.Absorption </p>
+<p>光子被吸收转化为其他形式的能量，用$\sigma_a$来表示。</p>
+<p>b.Out-scattering </p>
+<p>光子被反射到当前光线传播路径之外的其他方向，类似不透明表面用BRDF来描述反射光线方向的分布，参与介质则用相函数(phase function)来描述反射光线方向的分布，用$\sigma_s$来表示。</p>
+<p>c.Emission </p>
+<p>当介质达到比较高的温度时，会发射出由热能转化来的光子。</p>
+<p>d.In-scattering </p>
+<p>既然Out-scattering会将当前传播路径的光子反射到其他方向，同理其他传播路径的光子也能反射到当前传播路径，并对最终的Radiance产生贡献，用$\sigma_s$来表示。</p>
+<p>总而言之，Emission和In-scattering会对当前传播路径贡献光子，Absorption和Out-scattering则会消耗当前路径光子，这里需要引入一些定义：</p>
+<p>消亡系数$\sigma_t=\sigma_s(Out-scattering)+\sigma_a$可以用来描述被消耗比率。</p>
+<p>反照率定义为$\rho=\frac{\sigma_s}{\sigma_s+\sigma_a}=\frac{\sigma_s}{\sigma_t}$，反照率接近0时意味着光子几乎都是被介质吸收，像发电厂排放的黑烟就是这类介质，反照率为1意味着与介质接触的大部分光子都是被散射而不是被吸收，像云和大气就是这类介质。</p>
+<p>在不考虑参与介质时，可以认为摄像机入射radiance等于与视线相交的最近表面的出射radiance，也就是$L_i(c,-v)=L_o(p,v)$，光线追踪便是基于这个原理从眼发射射线，最近相交表面的颜色也就是最终相机像素点的颜色。但如果考虑到参与介质，这个等式就不成立了，光线在参与介质中传播时与介质交互，radiance会发生变化，这个变化可以表述为：</p>
+<p>$L_i(c,-v)=T_r(c,p)L_o(p,v)+\int_{0}^{||p-c||}T_r(c,c-vt)L_{scat}(c-vt,v)\sigma_sdt$</p>
+<p>$T_r(a,b)=e^{-\sigma_td}$，$d$为a两点间的距离，这里是均匀介质才有$T_r(a,b)=e^{-\sigma_td}$，否则$T_r(a,b)=e^{-\int_a^b\sigma_t(x)d||x||}$，这个公式也被称作Beer-Lambert定理。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/12/04/SamplingInCG/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -343,17 +886,24 @@
         
           
             <h2 id="Inverse-Transform-Sampling"><a href="#Inverse-Transform-Sampling" class="headerlink" title="Inverse Transform Sampling"></a>Inverse Transform Sampling</h2><p>一个很重要的数学知识是逆变换采样，在算各种数值积分时会经常用到。众所周知计算机在生成随机数时只能生成均匀分布的随机数，但在进行重要性采样时需要得到密度函数$pdf(x)=f(x)$的采样分布，这里就需要用到逆变换采样。<br>具体的做法是</p>
-<p>1.求累计密度函数$F_X(x)$，也就是$\int_{-\infty}^{x}f(x)dx$</p>
-<p>2.计算$F_X(x)$的反函数$F_X^{-1}(x)$</p>
-<p>3.生成区间$[0,1]$内的均匀分布采样点$U_i$</p>
-<p>4.计算$X_i=F_X^{-1}(U_i)$，$X_i$也就是密度函数为$f(x)$的分布</p>
+<ul>
+<li><p>求累计密度函数$F_X(x)$，也就是$\int_{-\infty}^{x}f(x)dx$</p>
+</li>
+<li><p>计算$F_X(x)$的反函数$F_X^{-1}(x)$</p>
+</li>
+<li><p>生成区间$[0,1]$内的均匀分布采样点$U_i$</p>
+</li>
+</ul>
+<ul>
+<li>计算$X_i=F_X^{-1}(U_i)$，$X_i$也就是密度函数为$f(x)$的分布</li>
+</ul>
 <p>ps:计算反函数$y=f(x)$，替换$xy$位置$x=f(y)$再次推导$y$的解析式就是反函数$f^{-1}(x)$了。</p>
 <p>证明过程为：</p>
 <p>设有分布$U$~$unif[0,1]$以及变换函数$T(U)=X$，经过变换后$X$满足累计密度函数$F_X(x)$，根据定义</p>
 <p>$F_X(x)=P(X\leqslant x)=P(T(U)\leqslant x)=P(U\leqslant T^{-1}(x))$</p>
 <p>而$U$是$[0,1]$内的均匀分布，$P(U\leqslant u)=u$，也就是$F_X(x)=P(U\leqslant T^{-1}(x))=T^{-1}(x)$</p>
 <p>$F_X(x)=T^{-1}(x)$也就是$T(x)=F_X^{-1}(x)$</p>
-<h2 id="Importance-Sampling"><a href="#Importance-Sampling" class="headerlink" title="Importance Sampling"></a>Importance Sampling</h2><p>重要性采样需要生成与密度函数分布相同的采样点，那么就需要逆变换采样了。</p>
+<h2 id="Importance-Sampling"><a href="#Importance-Sampling" class="headerlink" title="Importance Sampling"></a>Importance Sampling</h2><p>重要性采样需要生成与密度函数分布相同的采样点，也可以通过逆变换采样的方式将随机生成的均匀分布采样点投影到指定的密度函数。</p>
 <p>以法线半球面均匀分布为例，其密度函数$pdf(h)=\frac{n·h}{\pi}$</p>
 <p>用球面坐标可以表示为$pdf(\theta,\phi)=\frac{cos\theta sin\theta}{\pi}$</p>
 <p>(这里可以理解为法线$n$是球坐标系的z轴，因此有$cos\theta=n·h$)</p>
@@ -852,7 +1402,7 @@
 <p>使用$\rho (l)$代替$v(l)$的好处不仅在于不考虑自反射时渲染结果看起来更令人满意，还能起到加速计算的效果，超过$d_{max}$的物体可以不用参与遮蔽计算。</p>
 <p><img src="/2020/11/28/AmbientOcclusion/Obscurance.png" alt="obscurance"></p>
 <p>二值定义$v(l)$【左】与$\rho(l)$【右】的ao结果</p>
-<h2 id="Accounting-for-Interreflections"><a href="#Accounting-for-Interreflections" class="headerlink" title="Accounting for Interreflections"></a>Accounting for Interreflections</h2><p>环境光遮蔽与真正的全局光照最大的区别大于Interreflections(下记自反射orz)，计算遮蔽时将被遮挡的入射方向的radiance贡献算作0，实际上并不会是0，在离线渲染的着色中就会递归的计算视线路径上的所有着色点的radiance贡献，限于计算消耗，这样的方法并不能用在实时渲染上。</p>
+<h2 id="Accounting-for-Interreflections"><a href="#Accounting-for-Interreflections" class="headerlink" title="Accounting for Interreflections"></a>Accounting for Interreflections</h2><p>环境光遮蔽与真正的全局光照最大的区别大于Interreflections(自反射)，计算遮蔽时将被遮挡的入射方向的radiance贡献算作0，实际上并不会是0，在离线渲染的着色中就会递归的计算视线路径上的所有着色点的radiance贡献，限于计算消耗，这样的方法并不能用在实时渲染上。</p>
 <p>不过好在有一些经验公式可以得到与全局光照接近的效果，替换遮蔽系数$k_A$为$k_A^·$</p>
 <p>$k_A^·=\frac{k_A}{1-c_{albedo}(1-k_A)}$</p>
 <p>可以理解为将ao系数适当的放大了一些，得到了类似考虑了自反射的效果。</p>
@@ -1005,14 +1555,14 @@
             <p>EnvMap不仅能用于光泽反射表面的着色，也可以对漫反射表面着色。相比用来渲染光泽表面的EnvMap存储radiance数值，通过视线反射向量来索引取值，用来渲染漫反射表面的EnvMap存储的是irradiance数值，通过着色点的法线来索引取值。</p>
 <p>为什么要存储irradiance而不是像Specular IBL那样存储radiance呢？可以回顾一下理想漫反射表面的渲染方程：</p>
 <p>$L_o=\int_\Omega f(l,v)L_i (n·l)dl=\frac{c_{albedo}}{\pi}\int L_i(n·l)dl=\frac{c_{albedo}}{\pi}E$</p>
-<p>在渲染时我们只需要irradiance和表面的反照率属性就能通过简单的乘法计算得到最终的着色结果。</p>
+<p>在渲染时我们只需要irradiance和表面的diffuseColor属性就能通过简单的乘法计算得到最终的着色结果。</p>
 <p><img src="/2020/11/24/IrradianceEnvironmentMapping/CalculateIrradianceEnvMap.png" alt="calculate"></p>
-<p>预计算这个Irradiance EnvMap的过程就是一个数值积分，可以采用均匀分布或重要性采样进行预估。</p>
+<p>预计算这个Irradiance EnvMap的过程就是一个数值积分，可以用重要性采样进行预估。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p><img src="/2020/11/24/IrradianceEnvironmentMapping/IrradianceEnvMap.png" alt="irEnvMap"></p>
-<p>可以看到，包含高频信息的RadianceEnvironmentMap生成的IrradianceEnvironmentMap却只有低频信息，整个图像看起来十分模糊。这是必然的，Irradiance是法线半球上对radiance的积分，而环境贴图中相邻的法线间变化很小，两者积分半球区域几乎重叠，RadianceEnvironmentMap大部分radiance贡献都是共用（n·l有一些变化），最终导致了Irradiance变化缓慢，没有高频信息。</p>
-<p>没有高频信息的IrradianceEnvironmentMap十分适合投影到球谐函数，在预处理时利用数值积分求解球谐系数存储，实时渲染中通过球谐系数来重建IrradianceEnvironmentMap用于渲染漫反射表面。相比CubeMap存储，投影IrradianceEnvironmentMap到球谐函数只需要存储少量系数就能达到差不多的效果，并且极大节省空间。实际上这也是大多数游戏引擎的做法。</p>
+<p>可以看到，包含高频信息的RadianceEnvironmentMap生成的IrradianceEnvironmentMap却只有低频信息，整个图像看起来十分模糊。这是必然的，Irradiance是法线半球上对radiance的积分，而环境贴图中相邻的法线间变化很小，两者积分半球区域几乎重叠，RadianceEnvironmentMap大部分radiance贡献都是共用（n·l有一些变化）。</p>
+<p>缺少高频信息的IrradianceEnvironmentMap十分适合投影到球谐函数，在预处理时利用数值积分求解球谐系数存储，实时渲染中通过球谐系数来重建IrradianceEnvironmentMap用于渲染漫反射表面。相比CubeMap存储，投影IrradianceEnvironmentMap到球谐函数只需要存储少量系数就能达到差不多的效果，并且极大节省空间。实际上这也是大多数游戏引擎的做法。</p>
 
           
         
@@ -1370,336 +1920,13 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/01/PunctualAndAreaLightSource/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="SomeNotes">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/11/01/PunctualAndAreaLightSource/" itemprop="url">PunctualAndAreaLightSource</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-01T21:56:49+08:00">
-                2020-11-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Local-Illumination/" itemprop="url" rel="index">
-                    <span itemprop="name">Local Illumination</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="精确光源-Punctual-Light-Source"><a href="#精确光源-Punctual-Light-Source" class="headerlink" title="精确光源(Punctual Light Source)"></a>精确光源(Punctual Light Source)</h2><p><img src="/2020/11/01/PunctualAndAreaLightSource/PunctualAndArea.png" alt="punctual"></p>
-<p>精确光源定义为立体角无限小的球面光源。在这无限小的立体角中，光线的radiance为$L_c$，定义其光源的颜色$c_{light}$为其垂直照射在反照率为$(1,1,1)$的Lambertian表面所得到的出射光radiance，即</p>
-<p>$c_{light}=\lim_{\Omega \to 0} \frac{1}{\pi}\int_\Omega L_cd\omega$。</p>
-<p>对任意表面，精确光源对出射角度为$v$的radiance的贡献为:</p>
-<p>$L_o=\int_\Omega f_{brdf}(l,v)L_c(n ·l)^+d\omega$</p>
-<p>实际上整个半球面只有精确光源所在的立体角内有入射光，因此</p>
-<p>$\int_\Omega f_{brdf}(l,v)L_c(n ·l)^+d\omega=\lim_{\Omega \to 0}\int_\Omega f_{brdf}(l,v)L_c(n ·l)^+d\omega$</p>
-<p>而极小立体角可视为l无变化</p>
-<p>$L_o=f_{brdf}(n ·l)^+lim_{\Omega \to 0}\int_\Omega L_cd\omega=\pi f_{brdf}(n ·l)^+c_{light}$</p>
-<h2 id="面积光-Area-Light-Source"><a href="#面积光-Area-Light-Source" class="headerlink" title="面积光(Area Light Source)"></a>面积光(Area Light Source)</h2><p>面积光源则是在立体角$w_l$内有恒定的入射radiance $L_l$的光源，其对出射光方向$v$的radiance贡献则是在这个立体角范围内的积分：</p>
-<p>$L_o=\int_{l \in w_l} f_{brdf}(l,v)L_l(n ·l)^+dl$</p>
-<p>在实时渲染中对一个区域进行数值积分是不现实的，一个近似解决方案是用精确光源替代面积光</p>
-<p>$L_o \approx \pi f_{brdf}(n ·l)^+c_{light}$</p>
-<p>这个近似方案必然是有误差的，因为面积光源与着色点的立体角并不是精确光源那种理想化的极小值。不过这个误差可以人为把控，其主要受两个因素影响：一为源与物着色点的立体角，二为物体表面的粗糙度，因此，我们可以在仅用精确光源的情况下通过增加表面粗糙度来模拟面积光源照射的结果：</p>
-<p><img src="/2020/11/01/PunctualAndAreaLightSource/PunctualLightRoughnessSurface.png" alt="roughsurface"></p>
-<h3 id="漫反射表面的面积光着色"><a href="#漫反射表面的面积光着色" class="headerlink" title="漫反射表面的面积光着色"></a>漫反射表面的面积光着色</h3><p>对于理想Lambertian漫反射表面，用点光源来替换面积光源是不会引入误差的，其出射radiance可以通过iradiance得到：</p>
-<p>$L_o(v)=\frac{\rho_{ss}}{\pi}E$</p>
-<p>$\rho_{ss}$是表面材质属性中的反照率，irradiance $E$则可以通过积分计算：</p>
-<p>$E=\int_{l\in w_l} L_l(n·l)^+dl \approx \pi c_{light}(n·l_c)^+$</p>
-<p>即</p>
-<p>$L_o(v)=c_{light}\rho_{ss} (n·l_c)^+$</p>
-<p>也就是</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">lightDiff&#x3D;lightColor*albedo*max(0,dot(n,l))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="光泽表面的面积光着色"><a href="#光泽表面的面积光着色" class="headerlink" title="光泽表面的面积光着色"></a>光泽表面的面积光着色</h3><p>对光泽表面而言，最重要的视觉效果便是高光，我们在现实中可以观察到光泽表面的高光区域形状和大小与面积光源的形状大小类似，而其边缘会随着物体表面的粗糙度变化而有不同程度的模糊，这个现象引出了一些经验模型来近似面积光的照射结果。</p>
-<p>一种近似方法是根据物体和光源的位置来修正材质的粗糙度属性:</p>
-<p>$\alpha_g^·=(\alpha_g+\frac{r_l}{|p_l-p|})$</p>
-<p>这个近似是十分高效的，只修改了粗糙度的数值，不需要加入额外的计算过程，在大多数时候可以得到比较好的视觉效果。不过当物体表面十分光滑类似于镜面时，这个近似的效果就不那么好了，粗糙度变大并不能模拟镜面反射面积光源的结果，反而会让镜面看起来有一些模糊。</p>
-<p>另一种近似方法则是修正着色点到光源的向量，例如，球面光源可以选取距离视线反射向量最近的点代表整个光源，与着色点之间的向量作为光源向量参与计算：</p>
-<p><img src="/2020/11/01/PunctualAndAreaLightSource/MostRepresentativePoint.png" alt="MRP"></p>
-<p>设着色点为$p_{shade}$，那么修正后的光源向量$l_{light}=p_{cs}-p_{shade}$</p>
-<p>取代表点的思路看起来像是蒙特卡洛方法中的重要性采样，当要计算区域中某个函数的积分值时，可以着重采样概率分布比较大的区域。更为严格的解释则是</p>
-<p>[积分中值定理]：当函数$f(x)$在区间D内连续时,$\int_D f(x)dx=f(c)\int_D dx$</p>
-<p>对于光照而言，函数f(x)为$f(x)=f_{brdf}(l,v)L_i(n·l)^+$,区域D则是着色点上半球面中面积光源与着色点形成的立体角。</p>
-<p><img src="/2020/11/01/PunctualAndAreaLightSource/GlossySurfaceAreaLight.png" alt="GlossySurfaceAreaLight"></p>
-<p>从左到右依次为数值积分，修正粗糙度，修正光源向量的渲染结果。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/10/31/SphericalHarmonics/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="SomeNotes">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/10/31/SphericalHarmonics/" itemprop="url">球谐函数</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-10-31T15:44:13+08:00">
-                2020-10-31
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/cgmath/" itemprop="url" rel="index">
-                    <span itemprop="name">cgmath</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="从傅立叶级数说起"><a href="#从傅立叶级数说起" class="headerlink" title="从傅立叶级数说起"></a>从傅立叶级数说起</h2><p>在信号处理中常有用傅立叶变换把信号从时域转换到频域来进行分析和处理的做法，也就是将满足一定条件的周期函数$F(x)$，展开写成$F(x)=\sum_{-\infty}^{+\infty} a_k e^{jk(\frac{2\pi}{T})x}$，其中$a_k=\int_T F(x)e^{-jk(\frac{2\pi}{T})x}dx$，可以观察到，$a_k$是一个与原函数$F(x)$相关的积分式，而无论$F(x)$有没有解析式，我们既然得到了一个信号，那么它在任意$x_i$的函数值是可以得到的，因此可以通过数值积分来近似求解。</p>
-<h2 id="球谐函数"><a href="#球谐函数" class="headerlink" title="球谐函数"></a>球谐函数</h2><p>将定义在球面上的函数$F(\theta,\phi)$投影到以球谐函数为基的级数展开与此类似，只是定义域和基函数不一样。</p>
-<p>$F(\theta,\phi)$在球面的展开式为：</p>
-<p>$F(\theta,\phi)=\sum_{l=0}^{\infty}\sum_{m=-l}^{l}C_l^m Y_l^m(\theta,\phi)$</p>
-<p>$C_l^m$是球谐系数，$Y_l^m$为球谐函数，$C_l^m$相当于傅立叶变换中的$a_k$，这个系数的求解也与$a_k$类似</p>
-<p>$C_l^m=\int_S F(\theta,\phi)Y_l^m(\theta,\phi)d\omega$</p>
-<p>同样是个积分式，也是可以通过蒙特卡洛方法来进行积分的近似数值计算。</p>
-<p>$Y_l^m(\theta,\phi)$的解析式则比较复杂，这里就略过了）只要知道是定义在球面上的正交基集合，作用类似于$e^{-jk(\frac{2\pi}{T})x}$将函数展开为傅立叶级数，$l$值越大的球谐函数，包含的高频信息越多。</p>
-<h2 id="投影的意义"><a href="#投影的意义" class="headerlink" title="投影的意义"></a>投影的意义</h2><p>将一个可以得到数值解的函数$F(\theta,\phi)$投影的意义何在呢？我的理解是减少了存储数值解所需的空间，设想要存储来自天空的环境光，或是场景中某一点朝向任意方向的irradiance，若是存储为CubeMap，虽然可以保存比较高频的信息，但需要消耗大量的存储空间。而在不太需要高频信息的环境光和irradiance数值，在取$l=2$时就能得到不错的效果。在这些使用场景，就可以只存储基函数9x3channel,27个数值来重建光照信息。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">&lt;i class&#x3D;&quot;fa fa-angle-right&quot;&gt;&lt;&#x2F;i&gt;</a>
+  </nav>
+
 
 
           </div>
@@ -1743,7 +1970,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-count">12</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1754,7 +1981,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -1793,7 +2020,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

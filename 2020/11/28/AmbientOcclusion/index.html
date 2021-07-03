@@ -89,7 +89,7 @@
 <meta property="og:image" content="https://chaosrings.github.io/2020/11/28/AmbientOcclusion/BentNormal.png">
 <meta property="og:image" content="https://chaosrings.github.io/2020/11/28/AmbientOcclusion/Obscurance.png">
 <meta property="article:published_time" content="2020-11-27T16:25:05.006Z">
-<meta property="article:modified_time" content="2020-12-07T14:53:52.852Z">
+<meta property="article:modified_time" content="2021-06-27T11:29:13.811Z">
 <meta property="article:author" content="chaosrings">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://chaosrings.github.io/2020/11/28/AmbientOcclusion/BentNormal.png">
@@ -364,7 +364,7 @@
 <p>使用$\rho (l)$代替$v(l)$的好处不仅在于不考虑自反射时渲染结果看起来更令人满意，还能起到加速计算的效果，超过$d_{max}$的物体可以不用参与遮蔽计算。</p>
 <p><img src="/2020/11/28/AmbientOcclusion/Obscurance.png" alt="obscurance"></p>
 <p>二值定义$v(l)$【左】与$\rho(l)$【右】的ao结果</p>
-<h2 id="Accounting-for-Interreflections"><a href="#Accounting-for-Interreflections" class="headerlink" title="Accounting for Interreflections"></a>Accounting for Interreflections</h2><p>环境光遮蔽与真正的全局光照最大的区别大于Interreflections(下记自反射orz)，计算遮蔽时将被遮挡的入射方向的radiance贡献算作0，实际上并不会是0，在离线渲染的着色中就会递归的计算视线路径上的所有着色点的radiance贡献，限于计算消耗，这样的方法并不能用在实时渲染上。</p>
+<h2 id="Accounting-for-Interreflections"><a href="#Accounting-for-Interreflections" class="headerlink" title="Accounting for Interreflections"></a>Accounting for Interreflections</h2><p>环境光遮蔽与真正的全局光照最大的区别大于Interreflections(自反射)，计算遮蔽时将被遮挡的入射方向的radiance贡献算作0，实际上并不会是0，在离线渲染的着色中就会递归的计算视线路径上的所有着色点的radiance贡献，限于计算消耗，这样的方法并不能用在实时渲染上。</p>
 <p>不过好在有一些经验公式可以得到与全局光照接近的效果，替换遮蔽系数$k_A$为$k_A^·$</p>
 <p>$k_A^·=\frac{k_A}{1-c_{albedo}(1-k_A)}$</p>
 <p>可以理解为将ao系数适当的放大了一些，得到了类似考虑了自反射的效果。</p>
@@ -486,7 +486,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-count">12</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -497,7 +497,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -552,7 +552,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

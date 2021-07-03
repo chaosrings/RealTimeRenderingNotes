@@ -89,7 +89,7 @@
 <meta property="og:image" content="https://chaosrings.github.io/2020/11/24/IrradianceEnvironmentMapping/CalculateIrradianceEnvMap.png">
 <meta property="og:image" content="https://chaosrings.github.io/2020/11/24/IrradianceEnvironmentMapping/IrradianceEnvMap.png">
 <meta property="article:published_time" content="2020-11-24T15:18:19.355Z">
-<meta property="article:modified_time" content="2020-12-07T14:53:30.305Z">
+<meta property="article:modified_time" content="2021-06-27T11:32:30.225Z">
 <meta property="article:author" content="chaosrings">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://chaosrings.github.io/2020/11/24/IrradianceEnvironmentMapping/CalculateIrradianceEnvMap.png">
@@ -347,14 +347,14 @@
         <p>EnvMap不仅能用于光泽反射表面的着色，也可以对漫反射表面着色。相比用来渲染光泽表面的EnvMap存储radiance数值，通过视线反射向量来索引取值，用来渲染漫反射表面的EnvMap存储的是irradiance数值，通过着色点的法线来索引取值。</p>
 <p>为什么要存储irradiance而不是像Specular IBL那样存储radiance呢？可以回顾一下理想漫反射表面的渲染方程：</p>
 <p>$L_o=\int_\Omega f(l,v)L_i (n·l)dl=\frac{c_{albedo}}{\pi}\int L_i(n·l)dl=\frac{c_{albedo}}{\pi}E$</p>
-<p>在渲染时我们只需要irradiance和表面的反照率属性就能通过简单的乘法计算得到最终的着色结果。</p>
+<p>在渲染时我们只需要irradiance和表面的diffuseColor属性就能通过简单的乘法计算得到最终的着色结果。</p>
 <p><img src="/2020/11/24/IrradianceEnvironmentMapping/CalculateIrradianceEnvMap.png" alt="calculate"></p>
-<p>预计算这个Irradiance EnvMap的过程就是一个数值积分，可以采用均匀分布或重要性采样进行预估。</p>
+<p>预计算这个Irradiance EnvMap的过程就是一个数值积分，可以用重要性采样进行预估。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p><img src="/2020/11/24/IrradianceEnvironmentMapping/IrradianceEnvMap.png" alt="irEnvMap"></p>
-<p>可以看到，包含高频信息的RadianceEnvironmentMap生成的IrradianceEnvironmentMap却只有低频信息，整个图像看起来十分模糊。这是必然的，Irradiance是法线半球上对radiance的积分，而环境贴图中相邻的法线间变化很小，两者积分半球区域几乎重叠，RadianceEnvironmentMap大部分radiance贡献都是共用（n·l有一些变化），最终导致了Irradiance变化缓慢，没有高频信息。</p>
-<p>没有高频信息的IrradianceEnvironmentMap十分适合投影到球谐函数，在预处理时利用数值积分求解球谐系数存储，实时渲染中通过球谐系数来重建IrradianceEnvironmentMap用于渲染漫反射表面。相比CubeMap存储，投影IrradianceEnvironmentMap到球谐函数只需要存储少量系数就能达到差不多的效果，并且极大节省空间。实际上这也是大多数游戏引擎的做法。</p>
+<p>可以看到，包含高频信息的RadianceEnvironmentMap生成的IrradianceEnvironmentMap却只有低频信息，整个图像看起来十分模糊。这是必然的，Irradiance是法线半球上对radiance的积分，而环境贴图中相邻的法线间变化很小，两者积分半球区域几乎重叠，RadianceEnvironmentMap大部分radiance贡献都是共用（n·l有一些变化）。</p>
+<p>缺少高频信息的IrradianceEnvironmentMap十分适合投影到球谐函数，在预处理时利用数值积分求解球谐系数存储，实时渲染中通过球谐系数来重建IrradianceEnvironmentMap用于渲染漫反射表面。相比CubeMap存储，投影IrradianceEnvironmentMap到球谐函数只需要存储少量系数就能达到差不多的效果，并且极大节省空间。实际上这也是大多数游戏引擎的做法。</p>
 
       
     </div>
@@ -459,7 +459,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-count">12</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -470,7 +470,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -509,7 +509,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
