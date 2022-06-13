@@ -249,6 +249,480 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/24/IrradianceEnvironmentMapping/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/11/24/IrradianceEnvironmentMapping/" itemprop="url">IrradianceEnvironmentMapping</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-24T23:18:19+08:00">
+                2020-11-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Local-Illumination/" itemprop="url" rel="index">
+                    <span itemprop="name">Local Illumination</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>EnvMap不仅能用于光泽反射表面的着色，也可以对漫反射表面着色。相比用来渲染光泽表面的EnvMap存储radiance数值，通过视线反射向量来索引取值，用来渲染漫反射表面的EnvMap存储的是irradiance数值，通过着色点的法线来索引取值。</p>
+<p>为什么要存储irradiance而不是像Specular IBL那样存储radiance呢？可以回顾一下理想漫反射表面的渲染方程：</p>
+<p>$L_o=\int_\Omega f(l,v)L_i (n·l)dl=\frac{c_{albedo}}{\pi}\int L_i(n·l)dl=\frac{c_{albedo}}{\pi}E$</p>
+<p>在渲染时我们只需要irradiance和表面的diffuseColor属性就能通过简单的乘法计算得到最终的着色结果。</p>
+<p><img src="/2020/11/24/IrradianceEnvironmentMapping/CalculateIrradianceEnvMap.png" alt="calculate"></p>
+<p>预计算这个Irradiance EnvMap的过程就是一个数值积分，可以用重要性采样进行预估。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2020/11/24/IrradianceEnvironmentMapping/IrradianceEnvMap.png" alt="irEnvMap"></p>
+<p>可以看到，包含高频信息的RadianceEnvironmentMap生成的IrradianceEnvironmentMap却只有低频信息，整个图像看起来十分模糊。这是必然的，Irradiance是法线半球上对radiance的积分，而环境贴图中相邻的法线间变化很小，两者积分半球区域几乎重叠，RadianceEnvironmentMap大部分radiance贡献都是共用（n·l有一些变化）。</p>
+<p>缺少高频信息的IrradianceEnvironmentMap十分适合投影到球谐函数，在预处理时利用数值积分求解球谐系数存储，实时渲染中通过球谐系数来重建IrradianceEnvironmentMap用于渲染漫反射表面。相比CubeMap存储，投影IrradianceEnvironmentMap到球谐函数只需要存储少量系数就能达到差不多的效果，并且极大节省空间。实际上这也是大多数游戏引擎的做法。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/18/SpecularImageBasedLighting/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/11/18/SpecularImageBasedLighting/" itemprop="url">SpecularImageBasedLighting</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-18T23:13:07+08:00">
+                2020-11-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Local-Illumination/" itemprop="url" rel="index">
+                    <span itemprop="name">Local Illumination</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>Environment Map原本用于渲染镜面反射（roughness=0），经过一些改造，也能够用于渲染粗糙度不为0的光泽表面。<br>通过采集空间中给定点周围所有方向的radiance信息并存储到EnvMap中，对这个EnvMap进行一些处理就能模拟各种粗糙光泽表面。</p>
+<h2 id="Prfilter-Environment-Map"><a href="#Prfilter-Environment-Map" class="headerlink" title="Prfilter Environment Map"></a>Prfilter Environment Map</h2><p>将原本用于渲染纯镜面的环境贴图进行模糊操作就能让使用这个环境贴图来渲染反射的表面看起来有’粗糙’的感觉：</p>
+<p><img src="/2020/11/18/SpecularImageBasedLighting/RoughSpecular.png" alt="RoughSpecular"></p>
+<p>模糊的方式有很多种(均值，高斯滤波…)，不过在进行模糊处理的时候并没有考虑表面的BRDF，更为合理的做法应该是根据表面的粗糙度，法线和视线方向生成一个Specular Lobe，并基于此对EnvMap进行模糊。</p>
+<p><img src="/2020/11/18/SpecularImageBasedLighting/SpecularLobe.png" alt="SpecularLobe"></p>
+<p>不过这样一来就会有多个参数共同控制Specular Lobe的形状，为每个参数存储一个预处理贴图是不现实的。因此在实际应用时需要对视线方向和法线方法做一些假设，这样预处理时就只需要给定不同粗糙度预计算生成环境贴图，并在实时渲染中根据粗糙度选取合适的贴图使用。这个结构和GPU的MipMap十分贴合，现在的实现也都是用不同级的MipMap存储粗糙度不同的贴图。</p>
+<p><img src="/2020/11/18/SpecularImageBasedLighting/MipMap.png" alt="MipMap"></p>
+<h2 id="Split-Integral-Approximation-For-Microfact-BRDF"><a href="#Split-Integral-Approximation-For-Microfact-BRDF" class="headerlink" title="Split-Integral Approximation For Microfact BRDF"></a>Split-Integral Approximation For Microfact BRDF</h2><p>在微表面模型用环境贴图来渲染反射时，渲染方程有如下形式：</p>
+<p>$f_{smf}(l,v)=\frac{F(h,l)G(l,v,h)D(h)}{4|n·l||n·v|}$</p>
+<p>$L_{specularIBL}=\int_{l \in \Omega} f_{smf}(l,v)L_i(l)(n·l)dl$</p>
+<p>数值积分求解在实时渲染中消耗太大，那么就需要近似方法：</p>
+<p>$L_{specularIBL}=(\int_{l \in \Omega} D(r)L_i(l)(n·l)dl)(\int_{l \in \Omega}f_{smf}(l,v)(n·l))dl$</p>
+<p>$r$是要采样的环境贴图的方向，这个方法也叫做split-integral approximation（这个近似看起来不那么物理，感觉上是看起来好就行的经验公式？）</p>
+<p>经过分解后，第一个积分$\int_{l \in \Omega} D(r)L_i(l)(n·l)dl$只与表面粗糙度和反射向量相关，因为在预处理阶段无法确定法线方向n和视线方向v，只能假定$n=v=r$，在UE中的实现方式是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">float3 PrefilterEnvMap( float Roughness, float3 R )</span><br><span class="line">&#123;</span><br><span class="line">    float3 N &#x3D; R;</span><br><span class="line">    float3 V &#x3D; R;</span><br><span class="line">    float3 PrefilteredColor &#x3D; 0;</span><br><span class="line">    const uint NumSamples &#x3D; 1024;</span><br><span class="line">    for( uint i &#x3D; 0; i &lt; NumSamples; i++ )</span><br><span class="line">    &#123;</span><br><span class="line">        float2 Xi &#x3D; Hammersley( i, NumSamples );</span><br><span class="line">        float3 H &#x3D; ImportanceSampleGGX( Xi, Roughness, N );</span><br><span class="line">        float3 L &#x3D; 2 * dot( V, H ) * H - V;</span><br><span class="line">        float NoL &#x3D; saturate( dot( N, L ) );</span><br><span class="line">        if( NoL &gt; 0 )</span><br><span class="line">        &#123;</span><br><span class="line">            PrefilteredColor +&#x3D; EnvMap.SampleLevel( EnvMapSampler , L, 0 ).rgb * NoL;</span><br><span class="line">            TotalWeight +&#x3D; NoL;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return PrefilteredColor &#x2F; TotalWeight;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个计算过程大致的思路是对法线方向用GGX分布进行重要性采样得到中间向量$H$，基于向量$H$计算视线向量$V$的反射向量$L$，所有采样点计算生成的$L$向量也就构成了在指定粗糙度(Roughness)和反射方向(R)的Specular Lobe，用$L$从EnvMap中采样取值平均，就得到了第一个积分式的数值积分结果。</p>
+<p>第二个积分式$\int_{l \in \Omega}f_{smf}(l,v)(n·l)dl$ 在菲涅尔项使用Schlick近似时，$F_0$可以从积分中抽离出来：</p>
+<p>$\int_{l \in \Omega}f_{smf}(l,v)(n·l)dl=F_0\int_{\Omega}\frac{f_{smf}(l,v)}{F(v,h)}(1-(1-v·h)^5)cos\theta_{l}dl+\int_{\Omega}\frac{f_{smf}(l,v)}{F(v,h)}(1-v·h)^5cos\theta_{l}dl=F_0*scale+bias$</p>
+<p>抽离后可以发现在scale和bias的积分式中只有Roughness和$n·v$是变量：</p>
+<p>$\frac{f_{smf}(l,v)}{F(v,h)}=\frac{D(h)G(l,v,h)}{4(n·l)(n·v)}$</p>
+<p>UE中分别取不同的Roughness和$n·v$值预先计算这个数值积分并存放在一个2D LUT中，实时渲染时直接用Roughness和$n·v$索引取出scale和bias项，预计算的过程如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">float2 IntegrateBRDF( float Roughness, float NoV )</span><br><span class="line">&#123;</span><br><span class="line">    float3 N&#x3D;float3(0,0,1)</span><br><span class="line">    float3 V;</span><br><span class="line">    &#x2F;&#x2F;BRDF各向同性，所以在NoV给定时，所有V值得到的结果是一样的，这里就是任取一个向量V</span><br><span class="line">    V.x &#x3D; sqrt( 1.0f - NoV * NoV ); &#x2F;&#x2F; sin</span><br><span class="line">    V.y &#x3D; 0;</span><br><span class="line">    V.z &#x3D; NoV; &#x2F;&#x2F; cos</span><br><span class="line">    float A &#x3D; 0;</span><br><span class="line">    float B &#x3D; 0;</span><br><span class="line">    const uint NumSamples &#x3D; 1024;</span><br><span class="line">    for( uint i &#x3D; 0; i &lt; NumSamples; i++ )</span><br><span class="line">    &#123;</span><br><span class="line">        float2 Xi &#x3D; Hammersley( i, NumSamples );</span><br><span class="line">        float3 H &#x3D; ImportanceSampleGGX( Xi, Roughness, N );</span><br><span class="line">        float3 L &#x3D; 2 * dot( V, H ) * H - V;</span><br><span class="line">        float NoL &#x3D; saturate( L.z );</span><br><span class="line">        float NoH &#x3D; saturate( H.z );</span><br><span class="line">        float VoH &#x3D; saturate( dot( V, H ) );</span><br><span class="line">        if( NoL &gt; 0 )</span><br><span class="line">        &#123;</span><br><span class="line">            float G &#x3D; G_Smith( Roughness, NoV, NoL );</span><br><span class="line">            float G_Vis &#x3D; G * VoH &#x2F; (NoH * NoV);</span><br><span class="line">            float Fc &#x3D; pow( 1 - VoH, 5 );</span><br><span class="line">            A +&#x3D; (1 - Fc) * G_Vis;</span><br><span class="line">            B +&#x3D; Fc * G_Vis;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return float2( A, B ) &#x2F; NumSamples;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>综合两个分解积分式，实时渲染时IBL的着色就是：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">float3 ApproximateSpecularIBL( float3 SpecularColor , float Roughness, float3 N, float3 V )</span><br><span class="line">&#123;</span><br><span class="line">    float NoV &#x3D; saturate( dot( N, V ) );</span><br><span class="line">    float3 R &#x3D; 2 * dot( V, N ) * N - V;</span><br><span class="line">    float3 PrefilteredColor &#x3D; PrefilterEnvMap( Roughness, R );</span><br><span class="line">    float2 EnvBRDF &#x3D; IntegrateBRDF( Roughness, NoV );</span><br><span class="line">    return PrefilteredColor * ( SpecularColor * EnvBRDF.x + EnvBRDF.y );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/17/EnvironmentLighting/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/11/17/EnvironmentLighting/" itemprop="url">EnvironmentLighting</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-17T23:39:03+08:00">
+                2020-11-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Local-Illumination/" itemprop="url" rel="index">
+                    <span itemprop="name">Local Illumination</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>环境光与面积光方向光类似，也是一种直接光照模型。</p>
+<h2 id="Ambient-Light"><a href="#Ambient-Light" class="headerlink" title="Ambient Light"></a>Ambient Light</h2><p>Ambient Light是最简单的环境光模型，其radiance是一个常量数值，不会随着方向改变。当Ambient Light照射在漫反射表面时，得到的出射radiance $L_o$将会是一个常量值：</p>
+<p>$L_o=\frac{\rho_{ss}}{\pi}L_A\int_{l \in \Omega}n·l dl=L_A*\rho_{ss}$</p>
+<p>对任意BRDF的表面</p>
+<p>$L_o=L_A\int_{l \in \Omega}f(l,v) n·l dl$</p>
+<p>积分项$\int_{l \in \Omega}f(l,v) n·l dl$可定义为一个$R(l)$函数(directional-hemispherical reflectance)，实时渲染中常把此项简化为一个常数值$c_{amb}$，就有$L_o=c_{amb}L_A$，也就是代码中常见的:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">L_ambient&#x3D;Light_ambient*ambientColor</span><br></pre></td></tr></table></figure>
+
+<p>不过这里的着色是没有考虑物体间的相互遮挡的，因此一些凹陷处的颜色会比正确的结果要亮，为了解决这个问题也引申出了一系列计算遮蔽的方法。</p>
+<h2 id="Radiance-Varying-Light"><a href="#Radiance-Varying-Light" class="headerlink" title="Radiance Varying Light"></a>Radiance Varying Light</h2><p>区别于常量radiance的ambient light，另一种环境光形式则是radiance会随着方向变化。这种光源的radiance不是一个简单的数值，而是一个关于方向的函数。这个函数通常没有解析解(可以设想如何用一个函数表达式来描述大气层在照亮地面时的radiance)。因此，要在渲染中应用这种环境光，需要使用数值解，或是用函数近似的方式来实现。</p>
+<h3 id="Environment-Mapping"><a href="#Environment-Mapping" class="headerlink" title="Environment Mapping"></a>Environment Mapping</h3><p>将一个球面radiance函数记录在Texture上的方式也就是EnvironmentMapping了，是实时渲染中最常见的环境光表示方式。EnvironmentMapping优势在于简单高效，并且可以表示任意高频的radiance。因此，在需要渲染光泽材质时，就可以用EnvironmentMapping来记录周围环境的radiance信息，着色时只需要在着色点计算视线基于着色点法线的反射向量，在贴图中采样就能得到入射的radiance，也就是：</p>
+<p>$r=2(n·v)n-v$</p>
+<p>$L_i(v)=Sampler(EnvMapping,r)$</p>
+<p>Specular Image-Based Lighting就是基于此实现的。</p>
+<h3 id="SphericalHarmonics"><a href="#SphericalHarmonics" class="headerlink" title="SphericalHarmonics"></a>SphericalHarmonics</h3><p>另外一种方式就是将环境光照投影到球谐函数，对于比较低频的光照信息，可以通过存储少量球谐系数来近似目标函数(参见SphericalHarmonics XD)。这个方法的优势在于相比EnvironmentMapping，所需要的存储空间极少。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/01/PunctualAndAreaLightSource/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -613,7 +1087,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -624,7 +1098,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -663,7 +1137,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

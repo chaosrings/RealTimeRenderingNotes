@@ -249,6 +249,558 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2022/06/12/UEController/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/06/12/UEController/" itemprop="url">UE4Controller</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2022-06-12T17:56:02+08:00">
+                2022-06-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/UnrealEngine/" itemprop="url" rel="index">
+                    <span itemprop="name">UnrealEngine</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>分析现有的第一人称射击游戏可以发现,无论是早期的CS,Half-Life还是最近的使命召唤,战地.基本的操作模式不说有点相像只能说一模一样.玩家角色的面向永远跟随鼠标/控制器的旋转,移动基于视角的面向进行.</p>
+<p><img src="/2022/06/12/UEController/TTF.jpg"></p>
+<center>泰坦陨落</center>
+
+<p>而第三人称游戏的操作模式有些变化,大体上可以分为两种模式.</p>
+<p>一种为角色朝向输入方向运动,大部分自由视角的游戏都是这种操作模式.</p>
+<p><video class="ztext-gif GifPlayer-gif2mp4 css-1xeqk96" src="https://vdn3.vzuu.com/SD/c6c0258a-33a7-11ec-a88b-ee4e20c75e8c.mp4?disable_local_cache=1&amp;bu=078babd7&amp;c=avc.0.0&amp;f=mp4&amp;expiration=1655133505&amp;auth_key=1655133505-0-0-c7ac80e56ad73dd275667679295f41d3&amp;v=tx&amp;pu=078babd7" data-thumbnail="https://pic3.zhimg.com/v2-5cc3f977fe8757fcbc6b904cde98089a_b.jpg" poster="https://pic3.zhimg.com/v2-5cc3f977fe8757fcbc6b904cde98089a_b.jpg" data-size="normal" preload="metadata" loop playsinline></video></p>
+<p>一种为角色朝向相机的八方向运动,锁定敌人的情况下会是这种操作模式(艾尔登法环,黑暗之魂的锁定系统).</p>
+<p><video class="ztext-gif GifPlayer-gif2mp4 css-1xeqk96" src="https://vdn1.vzuu.com/SD/0c8c2542-33a7-11ec-9a5d-c2cfa79caada.mp4?disable_local_cache=1&amp;bu=078babd7&amp;c=avc.0.0&amp;f=mp4&amp;expiration=1655133505&amp;auth_key=1655133505-0-0-5df8cc50f1d838eae9f0e1664ef623e9&amp;v=hw&amp;pu=078babd7" data-thumbnail="https://pic2.zhimg.com/v2-99aaa1c7e754832d49c216dcb93c9db5_b.jpg" poster="https://pic2.zhimg.com/v2-99aaa1c7e754832d49c216dcb93c9db5_b.jpg" data-size="normal" preload="metadata" loop playsinline></video></p>
+<p>而无论角色朝向相机与否,角色的移动总是基于相机方向进行.</p>
+<p>在大多数游戏需要的移动控制需求都十分类似的情况下,非常适合在引擎中实现一套功能完善的控制系统,避免游戏开发者重复造轮子.Unreal在其GamePlay框架下实现了一套大部分情况下能满足开发者需求的控制系统.</p>
+<h2 id="PlayerController"><a href="#PlayerController" class="headerlink" title="PlayerController"></a>PlayerController</h2><p>首先可以看官方文档对PlayerController的解释:</p>
+<blockquote>
+<p>PlayerController（玩家控制器） 是Pawn和控制它的人类玩家间的接口。PlayerController本质上代表了人类玩家的意愿。当您设置PlayerController时，您需要考虑的一个事情就是您想在PlayerController中包含哪些功能及内容。您可以在 Pawn 中处理所有输入， 尤其是不太复杂的情况下。但是，如果您的需求非常复杂，比如在一个游戏客户端上的多玩家、或实时地动态修改角色的功能，那么最好在PlayerController中处理输入。在这种情况中，PlayerController决定要干什么，然后将命令（比如”开始蹲伏”、”跳跃”）发布给Pawn。</p>
+</blockquote>
+<p>与PlayerController相对的是AIController,两者都继承自Controller.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">classDiagram</span><br><span class="line">class AController&#123;</span><br><span class="line">    ControlRotation:FRotator</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class AAIController&#123;</span><br><span class="line">    RunBehaviorTree()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class APlayerController&#123;</span><br><span class="line">    RotationInput:FRotator</span><br><span class="line">    AddPitchInput()</span><br><span class="line">    AddYawInput()</span><br><span class="line">    AddRollInput()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">AController &lt;|--AAIController</span><br><span class="line">AController &lt;|--APlayerController</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>AIController提供行为树管理AI控制的Pawn,PlayerController则接受输入控制玩家角色Pawn.</p>
+<p>PlayerContoller中成员方法众多,这里我们只关注ControlRotaion这个属性.</p>
+<h2 id="ActorRotation与ControlRotation"><a href="#ActorRotation与ControlRotation" class="headerlink" title="ActorRotation与ControlRotation"></a>ActorRotation与ControlRotation</h2><p>ActorRotaion容易理解,无论是在第一人称还是第三人称的游戏中,玩家的角色总是会有一个面向,这个面向在Unreal中被称为ActorRotaion.</p>
+<p><img src="/2022/06/12/UEController/ActorRotation.png"></p>
+<p>图中箭头指向的方向可以用来标记这个朝向.</p>
+<p>ControlRotation的含义是什么呢?实际上就是视角的面向,在第三人称无锁定自由视角的操作模式下,玩家角色的面向与视角的面向在大部分时候并不一致,玩家可以自由控制视角的面向,玩家可以只转动视角让角色正对着屏幕,也能让角色背对屏幕,这个过程实际上就是改变了ControlRotation,并且让相机POV根据新的ControlRotation进行位置和旋转面向的调整:</p>
+<p><img src="/2022/06/12/UEController/ControlRotation_F.png"><br><img src="/2022/06/12/UEController/ControlRotation.png"></p>
+<p>图中的红线方向是角色的面向,蓝线则是转动视角时视角的面向,实现的逻辑如下:</p>
+<p><img src="/2022/06/12/UEController/DebugDrawLine.png"></p>
+<h2 id="ControlRotation更新逻辑"><a href="#ControlRotation更新逻辑" class="headerlink" title="ControlRotation更新逻辑"></a>ControlRotation更新逻辑</h2><p>ControlRotation接受玩家输入的接口是</p>
+<ul>
+<li>APlayerController::AddPitchInput(float val)</li>
+<li>APlayerController::AddYawInput(float val)</li>
+<li>APlayerController::AddRollInput(float val)</li>
+</ul>
+<p>一般来说只需要考虑Pitch和Yaw的输入,用鼠标作为输入为例,Pitch对应上下瞄准,Yaw对应左右瞄准,同理可以推及手柄(右摇杆上下左右移动)/手机屏幕(上下左右划屏幕).</p>
+<p>在ACharacter::SetupPlayerInputComponent的执行过程中可以对输入设备的输入进行回调函数绑定.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">AACTCharacter::SetupPlayerInputComponent</span><span class="params">(UInputComponent* PlayerInputComponent)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	Super::SetupPlayerInputComponent(PlayerInputComponent);</span><br><span class="line">	...</span><br><span class="line">	PlayerInputComponent-&gt;BindAxis(TEXT(<span class="string">&quot;Turn&quot;</span>), <span class="keyword">this</span>, &amp;ACharacter::AddControllerYawInput);</span><br><span class="line">	PlayerInputComponent-&gt;BindAxis(TEXT(<span class="string">&quot;LookUp&quot;</span>), <span class="keyword">this</span>, &amp;ACharacter::AddControllerPitchInput);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">APlayerController::AddYawInput</span><span class="params">(<span class="keyword">float</span> Val)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	RotationInput.Yaw += !IsLookInputIgnored() ? Val : <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接受到输入后ControlRotation并不会立刻更新,而是等待PlayerController的Tick调用,结束后会将RotationInput中累积的数据清空.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">APlayerController::UpdateRotation</span><span class="params">( <span class="keyword">float</span> DeltaTime )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">// Calculate Delta to be applied on ViewRotation</span></span><br><span class="line">	<span class="function">FRotator <span class="title">DeltaRot</span><span class="params">(RotationInput)</span></span>;</span><br><span class="line"></span><br><span class="line">	FRotator ViewRotation = GetControlRotation();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (PlayerCameraManager)</span><br><span class="line">	&#123;</span><br><span class="line">		PlayerCameraManager-&gt;ProcessViewRotation(DeltaTime, ViewRotation, DeltaRot);</span><br><span class="line">	&#125;</span><br><span class="line">    ...</span><br><span class="line">	SetControlRotation(ViewRotation);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Update-Camera-By-ControlRotation"><a href="#Update-Camera-By-ControlRotation" class="headerlink" title="Update Camera By ControlRotation"></a>Update Camera By ControlRotation</h2><p>在分析相机的文章中有提到过SpringArmComponent,在其Camera Settings的栏位中有UsePawnControlRotation,Inherit Pitch,Inherit Yaw,Inherit Roll四个属性,勾选这些选项后,子节点的相机就能根据鼠标的转动调整位置和朝向,为PlayerCameraManager提供合适的POV.</p>
+<p><img src="/2022/06/12/UEController/SpringArmComponent.png"></p>
+<p>这些选项体现在代码中就是</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">FRotator <span class="title">USpringArmComponent::GetTargetRotation</span><span class="params">()</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	FRotator DesiredRot = GetDesiredRotation();</span><br><span class="line">	<span class="keyword">if</span> (bUsePawnControlRotation)</span><br><span class="line">		DesiredRot = PawnViewRotation;</span><br><span class="line">	<span class="keyword">const</span> FRotator LocalRelativeRotation = GetRelativeRotation();</span><br><span class="line">	<span class="keyword">if</span> (!bInheritPitch)</span><br><span class="line">		DesiredRot.Pitch = LocalRelativeRotation.Pitch;</span><br><span class="line">	<span class="keyword">if</span> (!bInheritYaw)</span><br><span class="line">		DesiredRot.Yaw = LocalRelativeRotation.Yaw;</span><br><span class="line">	<span class="keyword">if</span> (!bInheritRoll)</span><br><span class="line">		DesiredRot.Roll = LocalRelativeRotation.Roll;</span><br><span class="line">	<span class="keyword">return</span> DesiredRot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">USpringArmComponent::UpdateDesiredArmLocation</span><span class="params">(<span class="keyword">bool</span> bDoTrace, <span class="keyword">bool</span> bDoLocationLag, <span class="keyword">bool</span> bDoRotationLag, <span class="keyword">float</span> DeltaTime)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    FRotator DesiredRot = GetTargetRotation();</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Now offset camera position back along our rotation</span></span><br><span class="line">	DesiredLoc -= DesiredRot.Vector() * TargetArmLength;</span><br><span class="line">	<span class="comment">// Add socket offset in local space</span></span><br><span class="line">	DesiredLoc += FRotationMatrix(DesiredRot).TransformVector(SocketOffset);</span><br><span class="line">    FVector ResultLoc = DesiredLoc;</span><br><span class="line">    / Form a transform <span class="keyword">for</span> <span class="keyword">new</span> world transform <span class="keyword">for</span> camera</span><br><span class="line">	FTransform WorldCamTM(DesiredRot, ResultLoc);</span><br><span class="line">	<span class="comment">// Convert to relative to component</span></span><br><span class="line">	FTransform RelCamTM = WorldCamTM.GetRelativeTransform(GetComponentTransform());</span><br><span class="line">	<span class="comment">// Update socket location/rotation</span></span><br><span class="line">	RelativeSocketLocation = RelCamTM.GetLocation();</span><br><span class="line">	RelativeSocketRotation = RelCamTM.GetRotation();</span><br><span class="line">	UpdateChildTransforms();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>总结代码的逻辑就是</p>
+<p>相机的位置 = 父节点位置 - ControlRotation * 弹簧臂长</p>
+<p>相机旋转 = ControlRotation</p>
+<p>经过弹簧臂的逻辑更新后,相机的朝向永远正对视角的朝向,位置则是保持在以角色为球心,弹簧臂长为半径的球面上,这样也就实现了第三人称下自由视角模式的摄像机功能.</p>
+<p>锁定模式下的人物朝向相机运动逻辑也容易理解,ControlRotation不再接受输入,ControlRotation与ActorRotation都固定为人物与锁定目标的连线.</p>
+<h2 id="CharacterMovement-By-ControlRotation"><a href="#CharacterMovement-By-ControlRotation" class="headerlink" title="CharacterMovement By ControlRotation"></a>CharacterMovement By ControlRotation</h2><p>前面提到过,人物的移动无论是在哪种操作模式下(包括第一人称),方向永远是相机的朝向,所以移动的逻辑也十分通用.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">AACTCharacter::MoveForward</span><span class="params">(<span class="keyword">float</span> val)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> ( val == <span class="number">0.0f</span> || !CanMove)</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	<span class="keyword">const</span> FRotator Rotation = GetControlRotation();</span><br><span class="line">	<span class="function"><span class="keyword">const</span> FRotator <span class="title">YawRotation</span><span class="params">(<span class="number">0</span>, Rotation.Yaw, <span class="number">0</span>)</span></span>;</span><br><span class="line">	AddMovementInput(YawRotation.Vector(), val);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2022/06/11/UECamera/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2022/06/11/UECamera/" itemprop="url">UE4Camera</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2022-06-11T22:32:31+08:00">
+                2022-06-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/UE4/" itemprop="url" rel="index">
+                    <span itemprop="name">UE4</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>在游戏中，摄像机决定了玩家以什么样的方式来观察游戏世界.游戏的类型有多种,第一人称射击, 第三人称动作/射击,RTS,横版游戏…各种游戏类型对相机的实现也不一样.</p>
+<p>UE GamePlay框架下的相机模块功能完备,大部分时候开发者不需要添加代码就可以实现各种类型游戏中的相机系统.</p>
+<h2 id="Point-Of-View"><a href="#Point-Of-View" class="headerlink" title="Point Of View"></a>Point Of View</h2><p>UE的相机模块有个关键的概念,Point Of View(POV),也就是玩家的视点,其中有位置,旋转,FOV,AspectRation等各种决定渲染变换矩阵的属性.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">FMinimalViewInfo</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	FVector Location;</span><br><span class="line">	FRotator Rotation;</span><br><span class="line">	<span class="keyword">float</span> FOV;</span><br><span class="line">	<span class="keyword">float</span> DesiredFOV;</span><br><span class="line">	<span class="keyword">float</span> OrthoWidth;</span><br><span class="line">	<span class="keyword">float</span> OrthoNearClipPlane;</span><br><span class="line">	<span class="keyword">float</span> OrthoFarClipPlane;</span><br><span class="line">	<span class="keyword">float</span> AspectRatio;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在游戏世界中,POV可能会有多个,但只有一个POV会成为ViewTarget,也就是最终的虚拟相机属性.更直白的说法就是,我可以在游戏世界中架设多台相机,但最终渲染结果只会用其中一个相机的摄影结果展示给玩家,这个ViewTarget的定义如下:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">FTViewTarget</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    TObjectPtr&lt;AActor&gt; Target;</span><br><span class="line">    FMinimalViewInfo POV;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="CameraComponent"><a href="#CameraComponent" class="headerlink" title="CameraComponent"></a>CameraComponent</h2><p><img src="/2022/06/11/UECamera/CameraComponent.png"></p>
+<p>CameraComponent提供了一个POV,一般而言作为ViewTarget的CameraComponent Location,Rotation,FOV等属性会直接传递给POV,可以看CameraComponet::GetCameraView()的实现:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UCameraComponent::GetCameraView</span><span class="params">(<span class="keyword">float</span> DeltaTime, FMinimalViewInfo&amp; DesiredView)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    DesiredView.Location = GetComponentLocation();</span><br><span class="line">    DesiredView.Rotation = GetComponentRotation();</span><br><span class="line">    DesiredView.FOV = bUseAdditiveOffset ? (FieldOfView + AdditiveFOVOffset) : FieldOfView;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第三人称游戏,通常会在玩家角色蓝图上添加CameraComponent,引擎会优先使用角色下的相机作为ViewTarget.</p>
+<p><img src="/2022/06/11/UECamera/CameraForPawn.png"></p>
+<p>CameraComponent并不是以Character作为父节点,而是以SpringArmComponent作为父节点.</p>
+<h2 id="Spring-Arm-Component"><a href="#Spring-Arm-Component" class="headerlink" title="Spring Arm Component"></a>Spring Arm Component</h2><p><img src="/2022/06/11/UECamera/SpringArmComponent.png"></p>
+<p>这个组件的作用是将子节点固定在父节点的相对位置,当玩家行走,控制转向时,作为子节点的CameraComponent会跟随着移动转向.</p>
+<p>这里看起来只需要放在子节点然后调节一个RelativePosition就能做到,为什么要多此一举用一个SpringArmComponent呢?实际上SpringArmComponent更重要的功能是检测相机是否与场景发生碰撞,在相机与场景发生交叉时候，弹簧臂将缩短父子节点的距离。遮挡消失后，距离又会变回设置的TargetArmLength.</p>
+<p>除此之外,SpringArmComponent还提供了选项用ControlRotation来控制摄像机旋转,以及为了体现速度感和瞬移的Lag插值移动相机功能.</p>
+<p>在这些组件的帮助下,第一人称的游戏可以将相机固定在人物的眼睛位置,第三人称则是把相机放在人物背后一段距离,第一/第三人称的切换也可以通过调整SpringArmComponent的属性来实现.RTS或者横版游戏的相机,也可以通过放置一个隐藏模型的Pawn在场景中实现.</p>
+<h2 id="相机切换"><a href="#相机切换" class="headerlink" title="相机切换"></a>相机切换</h2><p>游戏开发中只有玩家身上的相机在有些情况可能满足不了需求.譬如进入副本播放入场动画,到达指定位置触发实时演算的过场可能就需要在多个POV进行切换,UE中实现相机切换也十分简单,在场景中放置多个CameraComponent,通过蓝图或者C++代码进行切换:</p>
+<p>(PlayerController（玩家控制器） 是Pawn和控制它的人类玩家间的接口)</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">APlayerController::SetViewTarget(class AActor* NewViewTarget, struct FViewTargetTransitionParams TransitionParams)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (PlayerCameraManager)</span><br><span class="line">	&#123;</span><br><span class="line">		PlayerCameraManager-&gt;SetViewTarget(NewViewTarget, TransitionParams);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2022/06/11/UECamera/SetVIewTarget.png"></p>
+<p>为了让切镜不突兀,UE也预设了一些切换时的Blend效果:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">EViewTargetBlendFunction</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="comment">/** Camera does a simple linear interpolation. */</span></span><br><span class="line">	VTBlend_Linear,</span><br><span class="line">	<span class="comment">/** Camera has a slight ease in and ease out, but amount of ease cannot be tweaked. */</span></span><br><span class="line">	VTBlend_Cubic,</span><br><span class="line">	<span class="comment">/** Camera immediately accelerates, but smoothly decelerates into the target.  Ease amount controlled by BlendExp. */</span></span><br><span class="line">	VTBlend_EaseIn,</span><br><span class="line">	<span class="comment">/** Camera smoothly accelerates, but does not decelerate into the target.  Ease amount controlled by BlendExp. */</span></span><br><span class="line">	VTBlend_EaseOut,</span><br><span class="line">	<span class="comment">/** Camera smoothly accelerates and decelerates.  Ease amount controlled by BlendExp. */</span></span><br><span class="line">	VTBlend_EaseInOut,</span><br><span class="line">	<span class="comment">/** The game&#x27;s camera system has already performed the blending. Engine should not blend at all */</span></span><br><span class="line">	VTBlend_PreBlended,</span><br><span class="line">	VTBlend_MAX,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>PlayerController实际上会将SetViewTarget的操作转发给PlayerCameraManager执行,也就是唯一的摄像机管理类.</p>
+<h2 id="PlayerCameraManager"><a href="#PlayerCameraManager" class="headerlink" title="PlayerCameraManager"></a>PlayerCameraManager</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">APlayerCameraManager</span> :</span> <span class="keyword">public</span> AActor</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/** Current ViewTarget */</span></span><br><span class="line">	UPROPERTY(transient)</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">FTViewTarget</span> <span class="title">ViewTarget</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/** Pending view target for blending */</span></span><br><span class="line">	UPROPERTY(transient)</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">FTViewTarget</span> <span class="title">PendingViewTarget</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/** Time remaining in viewtarget blend. */</span></span><br><span class="line">	<span class="keyword">float</span> BlendTimeToGo;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/** Current view target transition blend parameters. */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">FViewTargetTransitionParams</span> <span class="title">BlendParams</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//震镜之类的效果在这里</span></span><br><span class="line">    UPROPERTY(transient)</span><br><span class="line">	TArray&lt;TObjectPtr&lt;UCameraModifier&gt;&gt; ModifierList;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从PlayerCameraManager的定义来看,PlayerCameraManager决定了观察游戏世界最终的视角是怎样的,除了提供接口用于切换镜头,摄像机效果如震镜,镜头特效也是在其中处理,其更新最终ViewTarget的堆栈如下:</p>
+<p><img src="/2022/06/11/UECamera/UpdateStack.png"></p>
+<p>在UWorld中的所有Actor的Tick逻辑执行完毕后,引擎才会驱动PlayerController-&gt;PlayerCameraManager更新ViewTarget.</p>
+<p>UCameraComponent::GetCameraView()就是用CameraComponent的属性的属性覆写ViewTarget中的POV数值.</p>
+<p>更新POV后,一些可能会改动相机最终属性的效果(震镜)会在其后处理,最后会处理镜头效果.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">APlayerCameraManager::UpdateViewTarget()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//更新POV</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">//震镜</span></span><br><span class="line">    ApplyCameraModifiers(DeltaTime, OutVT.POV);</span><br><span class="line">    <span class="comment">//镜头效果</span></span><br><span class="line">    UpdateCameraLensEffects(OutVT);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这些效果也可以在合适的时机用蓝图或者C++代码添加.<br><img src="/2022/06/11/UECamera/CameraShakeAndLensEffect.png"></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2021/09/22/UEAnimation/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2021/09/22/UEAnimation/" itemprop="url">UE4Animation</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-09-22T23:20:00+08:00">
+                2021-09-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/UE4/" itemprop="url" rel="index">
+                    <span itemprop="name">UE4</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Animation-Blueprint"><a href="#Animation-Blueprint" class="headerlink" title="Animation Blueprint"></a>Animation Blueprint</h2><p>AnimationBP类似于Unity中的Animator,主要功能就是用状态机的形式播放动画.</p>
+<p>打开动画蓝图的编辑窗口后，左下角可以看到EventGraph，AnimationGraph,AnimationLayers,Functions,Macros,Variables,EventDispatchers几个部分,比较关键的是EventGraph和AnimationGraph两个部分.</p>
+<h3 id="EventGraph"><a href="#EventGraph" class="headerlink" title="EventGraph"></a>EventGraph</h3><p><img src="/2021/09/22/UEAnimation/AnimBP_EventGraph.png"></p>
+<p>初始工程角色的动画蓝图中EventGraph每帧都会从Pawn的Movement组件中获取角色移动状态，并根据这些状态的数值来设置动画蓝图中的预设变量(Variables).可以理解为根据游戏逻辑设置动画蓝图的参数，AnimationGraph中的状态机就会根据这些变量选取合适的动画进行播放.</p>
+<p>上图就是从Pawn的MovementComponent中获取速度和下落状态,并设置sInAir,Speed变量.</p>
+<h3 id="AnimationGraph"><a href="#AnimationGraph" class="headerlink" title="AnimationGraph"></a>AnimationGraph</h3><p>最简单的AnimationGraph，一个状态机决定最终播放的动画</p>
+<p><img src="/2021/09/22/UEAnimation/AnimBP_AnimationGraph_General.png"></p>
+<p>展开状态机,可以看到状态机中状态的切换规则</p>
+<p><img src="/2021/09/22/UEAnimation/AnimBP_AnimationGraph_StateMachine.png"></p>
+<p>每个State都会输出一个动画,如何输出也可以自定义蓝图来实现.</p>
+<p>Idle/Run这个状态的输出动画,就是用EventGraph中设置的Speed变量对多个动画进行融合:</p>
+<p><img src="/2021/09/22/UEAnimation/AnimBP_AnimationGraph_StateDetail.png"></p>
+<p>除了State可以用蓝图来定义输出,State间的Transition条件也可以用蓝图来描述:</p>
+<p><img src="/2021/09/22/UEAnimation/AnimBP_AnimationGraph_TransitionDetail.png"></p>
+<p>可以用两个变量的异或值来决定是否切换状态.</p>
+<h3 id="Anim-Montage"><a href="#Anim-Montage" class="headerlink" title="Anim Montage"></a>Anim Montage</h3><p>动画蒙太奇个人觉得是个巧妙的设计.设想一下,用状态机实现了人物的行走跳跃翻滚后,如果想要实现按下某个键位后播放技能,应该怎么加入技能动画呢?</p>
+<p>如果只使用状态机,可能会这样实现:</p>
+<p><img src="/2021/09/22/UEAnimation/AnimBP_Skill.png"></p>
+<p>在Variables中添加变量Skill,分别用Skill=1,Skill=2,Skill=3进入对应的状态播放技能动画.实际上应该也有项目是这样做的)</p>
+<p>在技能比较少,状态机相对简单时,这样实现无可厚非.当状态机变得复杂时,技能状态与常驻状态耦合在同一个图中,开发新内容时需要改动AnimationGraph,技能变多时密密麻麻的连线也会增加理解成本.(不过用Unity的Animator只能这样实现,可以说是很难受了)</p>
+<p>AnimationGraph中的蒙太奇插槽就很好的解决了这个问题.</p>
+<p><img src="/2021/09/22/UEAnimation/AnimBP_AnimationGraph_General.png"></p>
+<p>StateMachine和OutputPose中的节点就是蒙太奇插槽,’DefaultSlot’是插槽的命名,是可以自定义的.正常情况可以认为这个节点不存在,此时</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OutputPose &#x3D; StateMachine</span><br></pre></td></tr></table></figure>
+
+<p>如果使用C++代码或者蓝图调用接口ACharacter::PlayAnimMontage(),OutputPose就会变成PlayAnimMontage中传入的动画:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OutputPose &#x3D; Slot&#39;DefaultSlot&#39; Animation</span><br></pre></td></tr></table></figure>
+
+<p>也就是说,蒙太奇插槽能用指定动画覆盖在这个节点之前的所有动画.用这个功能来实现新增技能就很方便了,只需要新增一个AnimMontage,使用蓝图或者C++代码在合适的时机调用PlayAnimMontage接口播放,不需要更改AnimationGraph,逻辑分工也十分清晰.</p>
+<p>AnimMontage则是由一个或多个动画片段组成,一个简单的蒙太奇示例:</p>
+<p><img src="/2021/09/22/UEAnimation/AnimBP_AnimMontage.png"></p>
+<p>大致可以分为三个部分:</p>
+<ul>
+<li>1:指定插槽播放,蒙太奇资源必须预设好其在AnimationGraph中的对应的Slot,播放蒙太奇时会覆盖Slot前的动画.</li>
+<li>2:动画回调事件,可以在动画回调事件中进行诸如播放音效,粒子效果计算伤害等功能.</li>
+<li>3:动画片段,一个或多个AnimationSequence拼接而成,可以指定从什么位置播放.</li>
+</ul>
+<p>ACT游戏中的搓招技能,连招也是通过蒙太奇来实现.</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2021/06/27/SubstanceExplorer/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1446,480 +1998,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/24/IrradianceEnvironmentMapping/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="SomeNotes">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/11/24/IrradianceEnvironmentMapping/" itemprop="url">IrradianceEnvironmentMapping</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-24T23:18:19+08:00">
-                2020-11-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Local-Illumination/" itemprop="url" rel="index">
-                    <span itemprop="name">Local Illumination</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>EnvMap不仅能用于光泽反射表面的着色，也可以对漫反射表面着色。相比用来渲染光泽表面的EnvMap存储radiance数值，通过视线反射向量来索引取值，用来渲染漫反射表面的EnvMap存储的是irradiance数值，通过着色点的法线来索引取值。</p>
-<p>为什么要存储irradiance而不是像Specular IBL那样存储radiance呢？可以回顾一下理想漫反射表面的渲染方程：</p>
-<p>$L_o=\int_\Omega f(l,v)L_i (n·l)dl=\frac{c_{albedo}}{\pi}\int L_i(n·l)dl=\frac{c_{albedo}}{\pi}E$</p>
-<p>在渲染时我们只需要irradiance和表面的diffuseColor属性就能通过简单的乘法计算得到最终的着色结果。</p>
-<p><img src="/2020/11/24/IrradianceEnvironmentMapping/CalculateIrradianceEnvMap.png" alt="calculate"></p>
-<p>预计算这个Irradiance EnvMap的过程就是一个数值积分，可以用重要性采样进行预估。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="/2020/11/24/IrradianceEnvironmentMapping/IrradianceEnvMap.png" alt="irEnvMap"></p>
-<p>可以看到，包含高频信息的RadianceEnvironmentMap生成的IrradianceEnvironmentMap却只有低频信息，整个图像看起来十分模糊。这是必然的，Irradiance是法线半球上对radiance的积分，而环境贴图中相邻的法线间变化很小，两者积分半球区域几乎重叠，RadianceEnvironmentMap大部分radiance贡献都是共用（n·l有一些变化）。</p>
-<p>缺少高频信息的IrradianceEnvironmentMap十分适合投影到球谐函数，在预处理时利用数值积分求解球谐系数存储，实时渲染中通过球谐系数来重建IrradianceEnvironmentMap用于渲染漫反射表面。相比CubeMap存储，投影IrradianceEnvironmentMap到球谐函数只需要存储少量系数就能达到差不多的效果，并且极大节省空间。实际上这也是大多数游戏引擎的做法。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/18/SpecularImageBasedLighting/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="SomeNotes">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/11/18/SpecularImageBasedLighting/" itemprop="url">SpecularImageBasedLighting</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-18T23:13:07+08:00">
-                2020-11-18
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Local-Illumination/" itemprop="url" rel="index">
-                    <span itemprop="name">Local Illumination</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Environment Map原本用于渲染镜面反射（roughness=0），经过一些改造，也能够用于渲染粗糙度不为0的光泽表面。<br>通过采集空间中给定点周围所有方向的radiance信息并存储到EnvMap中，对这个EnvMap进行一些处理就能模拟各种粗糙光泽表面。</p>
-<h2 id="Prfilter-Environment-Map"><a href="#Prfilter-Environment-Map" class="headerlink" title="Prfilter Environment Map"></a>Prfilter Environment Map</h2><p>将原本用于渲染纯镜面的环境贴图进行模糊操作就能让使用这个环境贴图来渲染反射的表面看起来有’粗糙’的感觉：</p>
-<p><img src="/2020/11/18/SpecularImageBasedLighting/RoughSpecular.png" alt="RoughSpecular"></p>
-<p>模糊的方式有很多种(均值，高斯滤波…)，不过在进行模糊处理的时候并没有考虑表面的BRDF，更为合理的做法应该是根据表面的粗糙度，法线和视线方向生成一个Specular Lobe，并基于此对EnvMap进行模糊。</p>
-<p><img src="/2020/11/18/SpecularImageBasedLighting/SpecularLobe.png" alt="SpecularLobe"></p>
-<p>不过这样一来就会有多个参数共同控制Specular Lobe的形状，为每个参数存储一个预处理贴图是不现实的。因此在实际应用时需要对视线方向和法线方法做一些假设，这样预处理时就只需要给定不同粗糙度预计算生成环境贴图，并在实时渲染中根据粗糙度选取合适的贴图使用。这个结构和GPU的MipMap十分贴合，现在的实现也都是用不同级的MipMap存储粗糙度不同的贴图。</p>
-<p><img src="/2020/11/18/SpecularImageBasedLighting/MipMap.png" alt="MipMap"></p>
-<h2 id="Split-Integral-Approximation-For-Microfact-BRDF"><a href="#Split-Integral-Approximation-For-Microfact-BRDF" class="headerlink" title="Split-Integral Approximation For Microfact BRDF"></a>Split-Integral Approximation For Microfact BRDF</h2><p>在微表面模型用环境贴图来渲染反射时，渲染方程有如下形式：</p>
-<p>$f_{smf}(l,v)=\frac{F(h,l)G(l,v,h)D(h)}{4|n·l||n·v|}$</p>
-<p>$L_{specularIBL}=\int_{l \in \Omega} f_{smf}(l,v)L_i(l)(n·l)dl$</p>
-<p>数值积分求解在实时渲染中消耗太大，那么就需要近似方法：</p>
-<p>$L_{specularIBL}=(\int_{l \in \Omega} D(r)L_i(l)(n·l)dl)(\int_{l \in \Omega}f_{smf}(l,v)(n·l))dl$</p>
-<p>$r$是要采样的环境贴图的方向，这个方法也叫做split-integral approximation（这个近似看起来不那么物理，感觉上是看起来好就行的经验公式？）</p>
-<p>经过分解后，第一个积分$\int_{l \in \Omega} D(r)L_i(l)(n·l)dl$只与表面粗糙度和反射向量相关，因为在预处理阶段无法确定法线方向n和视线方向v，只能假定$n=v=r$，在UE中的实现方式是：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">float3 PrefilterEnvMap( float Roughness, float3 R )</span><br><span class="line">&#123;</span><br><span class="line">    float3 N &#x3D; R;</span><br><span class="line">    float3 V &#x3D; R;</span><br><span class="line">    float3 PrefilteredColor &#x3D; 0;</span><br><span class="line">    const uint NumSamples &#x3D; 1024;</span><br><span class="line">    for( uint i &#x3D; 0; i &lt; NumSamples; i++ )</span><br><span class="line">    &#123;</span><br><span class="line">        float2 Xi &#x3D; Hammersley( i, NumSamples );</span><br><span class="line">        float3 H &#x3D; ImportanceSampleGGX( Xi, Roughness, N );</span><br><span class="line">        float3 L &#x3D; 2 * dot( V, H ) * H - V;</span><br><span class="line">        float NoL &#x3D; saturate( dot( N, L ) );</span><br><span class="line">        if( NoL &gt; 0 )</span><br><span class="line">        &#123;</span><br><span class="line">            PrefilteredColor +&#x3D; EnvMap.SampleLevel( EnvMapSampler , L, 0 ).rgb * NoL;</span><br><span class="line">            TotalWeight +&#x3D; NoL;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return PrefilteredColor &#x2F; TotalWeight;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这个计算过程大致的思路是对法线方向用GGX分布进行重要性采样得到中间向量$H$，基于向量$H$计算视线向量$V$的反射向量$L$，所有采样点计算生成的$L$向量也就构成了在指定粗糙度(Roughness)和反射方向(R)的Specular Lobe，用$L$从EnvMap中采样取值平均，就得到了第一个积分式的数值积分结果。</p>
-<p>第二个积分式$\int_{l \in \Omega}f_{smf}(l,v)(n·l)dl$ 在菲涅尔项使用Schlick近似时，$F_0$可以从积分中抽离出来：</p>
-<p>$\int_{l \in \Omega}f_{smf}(l,v)(n·l)dl=F_0\int_{\Omega}\frac{f_{smf}(l,v)}{F(v,h)}(1-(1-v·h)^5)cos\theta_{l}dl+\int_{\Omega}\frac{f_{smf}(l,v)}{F(v,h)}(1-v·h)^5cos\theta_{l}dl=F_0*scale+bias$</p>
-<p>抽离后可以发现在scale和bias的积分式中只有Roughness和$n·v$是变量：</p>
-<p>$\frac{f_{smf}(l,v)}{F(v,h)}=\frac{D(h)G(l,v,h)}{4(n·l)(n·v)}$</p>
-<p>UE中分别取不同的Roughness和$n·v$值预先计算这个数值积分并存放在一个2D LUT中，实时渲染时直接用Roughness和$n·v$索引取出scale和bias项，预计算的过程如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">float2 IntegrateBRDF( float Roughness, float NoV )</span><br><span class="line">&#123;</span><br><span class="line">    float3 N&#x3D;float3(0,0,1)</span><br><span class="line">    float3 V;</span><br><span class="line">    &#x2F;&#x2F;BRDF各向同性，所以在NoV给定时，所有V值得到的结果是一样的，这里就是任取一个向量V</span><br><span class="line">    V.x &#x3D; sqrt( 1.0f - NoV * NoV ); &#x2F;&#x2F; sin</span><br><span class="line">    V.y &#x3D; 0;</span><br><span class="line">    V.z &#x3D; NoV; &#x2F;&#x2F; cos</span><br><span class="line">    float A &#x3D; 0;</span><br><span class="line">    float B &#x3D; 0;</span><br><span class="line">    const uint NumSamples &#x3D; 1024;</span><br><span class="line">    for( uint i &#x3D; 0; i &lt; NumSamples; i++ )</span><br><span class="line">    &#123;</span><br><span class="line">        float2 Xi &#x3D; Hammersley( i, NumSamples );</span><br><span class="line">        float3 H &#x3D; ImportanceSampleGGX( Xi, Roughness, N );</span><br><span class="line">        float3 L &#x3D; 2 * dot( V, H ) * H - V;</span><br><span class="line">        float NoL &#x3D; saturate( L.z );</span><br><span class="line">        float NoH &#x3D; saturate( H.z );</span><br><span class="line">        float VoH &#x3D; saturate( dot( V, H ) );</span><br><span class="line">        if( NoL &gt; 0 )</span><br><span class="line">        &#123;</span><br><span class="line">            float G &#x3D; G_Smith( Roughness, NoV, NoL );</span><br><span class="line">            float G_Vis &#x3D; G * VoH &#x2F; (NoH * NoV);</span><br><span class="line">            float Fc &#x3D; pow( 1 - VoH, 5 );</span><br><span class="line">            A +&#x3D; (1 - Fc) * G_Vis;</span><br><span class="line">            B +&#x3D; Fc * G_Vis;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return float2( A, B ) &#x2F; NumSamples;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>综合两个分解积分式，实时渲染时IBL的着色就是：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">float3 ApproximateSpecularIBL( float3 SpecularColor , float Roughness, float3 N, float3 V )</span><br><span class="line">&#123;</span><br><span class="line">    float NoV &#x3D; saturate( dot( N, V ) );</span><br><span class="line">    float3 R &#x3D; 2 * dot( V, N ) * N - V;</span><br><span class="line">    float3 PrefilteredColor &#x3D; PrefilterEnvMap( Roughness, R );</span><br><span class="line">    float2 EnvBRDF &#x3D; IntegrateBRDF( Roughness, NoV );</span><br><span class="line">    return PrefilteredColor * ( SpecularColor * EnvBRDF.x + EnvBRDF.y );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/17/EnvironmentLighting/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="SomeNotes">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2020/11/17/EnvironmentLighting/" itemprop="url">EnvironmentLighting</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-17T23:39:03+08:00">
-                2020-11-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Local-Illumination/" itemprop="url" rel="index">
-                    <span itemprop="name">Local Illumination</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>环境光与面积光方向光类似，也是一种直接光照模型。</p>
-<h2 id="Ambient-Light"><a href="#Ambient-Light" class="headerlink" title="Ambient Light"></a>Ambient Light</h2><p>Ambient Light是最简单的环境光模型，其radiance是一个常量数值，不会随着方向改变。当Ambient Light照射在漫反射表面时，得到的出射radiance $L_o$将会是一个常量值：</p>
-<p>$L_o=\frac{\rho_{ss}}{\pi}L_A\int_{l \in \Omega}n·l dl=L_A*\rho_{ss}$</p>
-<p>对任意BRDF的表面</p>
-<p>$L_o=L_A\int_{l \in \Omega}f(l,v) n·l dl$</p>
-<p>积分项$\int_{l \in \Omega}f(l,v) n·l dl$可定义为一个$R(l)$函数(directional-hemispherical reflectance)，实时渲染中常把此项简化为一个常数值$c_{amb}$，就有$L_o=c_{amb}L_A$，也就是代码中常见的:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">L_ambient&#x3D;Light_ambient*ambientColor</span><br></pre></td></tr></table></figure>
-
-<p>不过这里的着色是没有考虑物体间的相互遮挡的，因此一些凹陷处的颜色会比正确的结果要亮，为了解决这个问题也引申出了一系列计算遮蔽的方法。</p>
-<h2 id="Radiance-Varying-Light"><a href="#Radiance-Varying-Light" class="headerlink" title="Radiance Varying Light"></a>Radiance Varying Light</h2><p>区别于常量radiance的ambient light，另一种环境光形式则是radiance会随着方向变化。这种光源的radiance不是一个简单的数值，而是一个关于方向的函数。这个函数通常没有解析解(可以设想如何用一个函数表达式来描述大气层在照亮地面时的radiance)。因此，要在渲染中应用这种环境光，需要使用数值解，或是用函数近似的方式来实现。</p>
-<h3 id="Environment-Mapping"><a href="#Environment-Mapping" class="headerlink" title="Environment Mapping"></a>Environment Mapping</h3><p>将一个球面radiance函数记录在Texture上的方式也就是EnvironmentMapping了，是实时渲染中最常见的环境光表示方式。EnvironmentMapping优势在于简单高效，并且可以表示任意高频的radiance。因此，在需要渲染光泽材质时，就可以用EnvironmentMapping来记录周围环境的radiance信息，着色时只需要在着色点计算视线基于着色点法线的反射向量，在贴图中采样就能得到入射的radiance，也就是：</p>
-<p>$r=2(n·v)n-v$</p>
-<p>$L_i(v)=Sampler(EnvMapping,r)$</p>
-<p>Specular Image-Based Lighting就是基于此实现的。</p>
-<h3 id="SphericalHarmonics"><a href="#SphericalHarmonics" class="headerlink" title="SphericalHarmonics"></a>SphericalHarmonics</h3><p>另外一种方式就是将环境光照投影到球谐函数，对于比较低频的光照信息，可以通过存储少量球谐系数来近似目标函数(参见SphericalHarmonics XD)。这个方法的优势在于相比EnvironmentMapping，所需要的存储空间极少。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1970,7 +2048,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1981,7 +2059,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
@@ -2020,7 +2098,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
