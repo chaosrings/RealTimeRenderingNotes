@@ -249,6 +249,493 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/12/02/SpecularGlobalIllumination/" itemprop="url">SpecularGlobalIllumination</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-12-02T21:33:07+08:00">
+                2020-12-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Global-Illumination/" itemprop="url" rel="index">
+                    <span itemprop="name">Global Illumination</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>镜面材质的全局光照实现方式大致也可以分为预计算和近似计算两种实现方式。</p>
+<h2 id="Localized-Environment-Maps"><a href="#Localized-Environment-Maps" class="headerlink" title="Localized Environment Maps"></a>Localized Environment Maps</h2><p>在Unity被称作Reflection Probe。</p>
+<p>这种实现方式的原理与局部光照中的Specular IBL十分类似，主要有两点不同：</p>
+<p>1.Specular IBL采样radiance的贴图是全局的EnvMap，LocalizedEnvMap则是在指定空间区域（多为立方体）内收集周围的radiance信息，在这个区域内的镜面材质物体着色才会使用这个LocalizedEnvMap。</p>
+<p><img src="/2020/12/02/SpecularGlobalIllumination/LocalizedEnvMap.png" alt="localizedEnvMap"></p>
+<p>2.Specular IBL中环境光被认为是从无穷远点入射到表面，因此直接使用视线反射向量来采样环境贴图并不会带来误差——相对于无穷远处，场景中的任意物体都可以视作在环境贴图的中心。但LocalizedEnvMap并不能这样处理，除非着色点正好位于作用区域的中心位置，越是偏离中心位置的着色点直接使用视线反射向量来采样LocalizedEnvMap产生的误差就会越大。</p>
+<p><img src="/2020/12/02/SpecularGlobalIllumination/ReflectionProxy.png" alt="reflectionProxy"></p>
+<p>采样LocalizedEnvMap向量的计算方式如右图，首先根据视线向量$v$以及着色点法线$n$计算反射向量$r$，计算$r$与作用区域几何体的交点$p$，最终的采样向量$r`$为作用区域中心到交点$p$的向量。</p>
+<p>除此之外，在Specular IBL中一些预处理的方法都可以用在LocalizedEnvMap，比如MipMap建立不同粗糙度的贴图，split-integral approximation等…</p>
+<h2 id="Planar-Reflections"><a href="#Planar-Reflections" class="headerlink" title="Planar Reflections"></a>Planar Reflections</h2><p><img src="/2020/12/02/SpecularGlobalIllumination/PlanarReflection.png" alt="planarReflection"></p>
+<p>当要渲染的物体是一个平面时，可以通过直接渲染场景中其他物体与此平面的镜像来模拟镜面材质，这种方法十分简单易于理解，不仅能渲染完美镜面的反射效果，也能模拟带有一定粗糙度的光泽表面。缺陷在于消耗很大，相当于场景中的物体要被渲染两次。</p>
+<h2 id="Screen-Space-Methods"><a href="#Screen-Space-Methods" class="headerlink" title="Screen Space Methods"></a>Screen Space Methods</h2><p>最常见的算法就是SSR以及基于这个算法的一系列改进和衍生算法。算法原理不难理解，大致的步骤为：</p>
+<p>1.根据视线向量和着色点法线计算反射向量$r$</p>
+<p>2.从着色点的空间位置（世界空间，视线空间，改进算法有投影到屏幕空间）开始，沿着反射向量$r$步进。</p>
+<p>3.根据步进后迭代点投影到屏幕空间的坐标$P_{screenSpace}^i$在深度缓存中采样，判断缓存的深度是否比采样点的深度小，若是则认为光线与物体产生了交点，用$P_{screenSpace}^i$采样颜色缓存，作为入射方向$-r$的radiance贡献；反之则继续迭代步骤2，直到脱离场景。</p>
+<p>原理虽然看起来比较简单，但如果就按这个思路去实现的话会发现效果几乎不能看，需要经过额外的优化算法才能有不错的效果，比如步进时不是每次增加固定长度而是二分查找，投影到屏幕空间进行迭代，对追踪起点做一些抖动…<br>有时间的话可以实现一下SSR算法。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/12/01/DiffuseGlobalIllumination/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/12/01/DiffuseGlobalIllumination/" itemprop="url">DiffuseGlobalIllumination</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-12-01T23:14:03+08:00">
+                2020-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Global-Illumination/" itemprop="url" rel="index">
+                    <span itemprop="name">Global Illumination</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>全局光照除了处理遮挡关系的AmbientOcclusion之外，还有一个关键在于物体间的间接光照，回想局部光照模型中的光线路径会发现，无论是Diffuse还是Specular部分都可以用$L(D|S)E$来描述(L:光源 D:漫反射 S:镜面反射 E:眼)，也就是到达人眼时，光线仅经过了一次弹射。但实际上物体之间是会有间接光照的，真正的光线路径应该是$L(D|S)^*E$。实时渲染中并不能像光线追踪那般递归计算光线路径(消耗太大，光栅化架构也不合适)，因此在实时渲染中，全局光照多用预计算和高效近似计算两种方式来实现。</p>
+<h2 id="Surface-Prelighting"><a href="#Surface-Prelighting" class="headerlink" title="Surface Prelighting"></a>Surface Prelighting</h2><p>简单来说就是将场景中的物体分为static和dynamic两类，static物体与光源以及其余static物体会在实时渲染之前使用离线渲染的算法预先计算好正确的光照交互的结果（通常是缓存Irradiance），实时渲染时只需要取出结果与表面材质进行计算。dynamic物体则还是使用LocalIllumination的模型进行光照计算，也可以使用一些近似算法来得到不那么PhysicallyBased的光照结果。</p>
+<p><img src="/2020/12/01/DiffuseGlobalIllumination/LightMap.png" alt="lightMap"></p>
+<p>Unity的LightMap原理便是如此,可以参考shader中对LightMap的使用：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">float4 albedo&#x3D;tex2D(_MainTex,i.uv);</span><br><span class="line">half3 lm &#x3D; DecodeLightmap(UNITY_SAMPLE_TEX2D(unity_Lightmap, i.uv1));</span><br><span class="line">float3 diffuse &#x3D; albedo.rgb * lm;</span><br></pre></td></tr></table></figure>
+
+<p>不过预先计算表面Irradiance的方式是有缺陷的，在预计算时就需要得知法线的方向，无法在运行时通过法线贴图的方式得到更为精细的表面细节，因此又引申出了Directional Surface Prelighting</p>
+<h3 id="Directional-Surface-PreLighting"><a href="#Directional-Surface-PreLighting" class="headerlink" title="Directional Surface PreLighting"></a>Directional Surface PreLighting</h3><p>Directional Surface PreLighting的思路很简单，既然一个既定方向的Irradiance无法满足要求，那么可以把所有方向的Irradiance都预计算好，实时渲染时通过表面法线向量来索引取值。实际上这也是最常用的做法，预计算所有方向的Irradiance，通过数值积分的方式投影到球谐函数，在Texture中存储少量的球谐系数，实时渲染时通过球谐系数来重建光照信息，传入法线来获得Irradiance参与光照计算。通常而言投影到3阶球谐系数就能得到不错的结果，不过3阶系数需要9x3=27个float量，是简单Irradiance贴图的9倍消耗，因为这个原因也有一些优化的算法。</p>
+<h3 id="Volumeterically-PreLighting"><a href="#Volumeterically-PreLighting" class="headerlink" title="Volumeterically PreLighting"></a>Volumeterically PreLighting</h3><p>既然我们能将对静态物体的光照预计算结果存储于光照贴图并在实时渲染中使用，那么是否可以更进一步预计算存储场景中一些指定点（自动生成或人工指定）的Irradiance，实时渲染时用这些已知点的Irradiance信息通过插值的方式来查询场景中任意一点的Irradiance呢？答案是可以的，并且效果还不错，实际上多数游戏引擎对动态物体的GlobalDiffuseIllumination就是基于这个方法来实现的。</p>
+<h4 id="Irradiance-Volume"><a href="#Irradiance-Volume" class="headerlink" title="Irradiance Volume"></a>Irradiance Volume</h4><p> <a target="_blank" rel="noopener" href="http://developer.amd.com/wordpress/media/2012/10/Tatarchuk_Irradiance_Volumes.pdf">这里有篇文章写很很好</a></p>
+<p>IrradianceVolume是一个三维空间中的网格，类似下图：</p>
+<p><img src="/2020/12/01/DiffuseGlobalIllumination/IrradianceVolume.png" alt="irradianceVolume"></p>
+<p>图中规则排列的小球就是IrradianceVolume的节点。<br>构建IrradianceVolume常用的做法是在指定区域（自动或人工划分）用八叉树划分空间，为八叉树上的每个节点预计算当前空间位置的Irradiance信息（离线渲染，类似于烘焙LightMap），节点存储的并不是具体的Irradiance数值，而是Spherical Irradiance，即Irradiance随法线方向变化的函数，存储函数的方式则是将Spherical Irradiance投影球谐函数存储系数。</p>
+<p><img src="/2020/12/01/DiffuseGlobalIllumination/TrilinearInterpolation.png" alt="trilinearInterpolation"></p>
+<p>实时渲染使用IrradianceVolume则是查找着色点空间位置在八叉树中的划分，根据包围矩形8点顶点的预计算Irradiance信息，通过插值来获得着色点的Irradiance参与着色计算，插值方式根据划分的方式不同各有差异，比如三线性插值，立方体插值…</p>
+<h4 id="Unity-Tetrahedral-Interpolation"><a href="#Unity-Tetrahedral-Interpolation" class="headerlink" title="Unity Tetrahedral Interpolation"></a>Unity Tetrahedral Interpolation</h4><p>Unity引擎中实现dynamic物体的GlobalDiffuseIllumination组件是LightProbe，原理个人感觉与Irradiance Volume非常类似，只不过空间的划分和查找方式不一样。Unity采用四面体的方式来划分空间，实时渲染则查找包围四面体的四个节点来进行插值计算：</p>
+<p><img src="/2020/12/01/DiffuseGlobalIllumination/tetrahedralInterpolation.png" alt="tetrahedralInterpolation"></p>
+<p>shader中的使用很简单，直接调用build-in函数ShadeSH9传入着色点法线就能获得着色点的Irradiance信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; normal should be normalized, w&#x3D;1.0</span><br><span class="line">half3 SHEvalLinearL0L1 (half4 normal) ｛</span><br><span class="line">    half3 x;</span><br><span class="line">    &#x2F;&#x2F; Linear (L1) + constant (L0) polynomial terms</span><br><span class="line">    x.r &#x3D; dot(unity_SHAr,normal);</span><br><span class="line">    x.g &#x3D; dot(unity_SHAg,normal);</span><br><span class="line">    x.b &#x3D; dot(unity_SHAb,normal);</span><br><span class="line">    return x;</span><br><span class="line">｝</span><br><span class="line">&#x2F;&#x2F; normal should be normalized, w&#x3D;1.0</span><br><span class="line">half3 SHEvalLinearL2 (half4 normal) ｛</span><br><span class="line">    half3 x1, x2;</span><br><span class="line">    &#x2F;&#x2F; 4 of the quadratic (L2) polynomials</span><br><span class="line">    half4 vB &#x3D; normal.xyzz * normal.yzzx;</span><br><span class="line">    x1.r &#x3D; dot(unity_SHBr,vB);</span><br><span class="line">    x1.g &#x3D; dot(unity_SHBg,vB);</span><br><span class="line">    x1.b &#x3D; dot(unity_SHBb,vB);</span><br><span class="line">    &#x2F;&#x2F; Final (5th) quadratic (L2) polynomial</span><br><span class="line">    half vC &#x3D; normal.x * normal.x - normal.y * normal.y;</span><br><span class="line">    x2 &#x3D; unity_SHC.rgb * vC;</span><br><span class="line">    return x1 + x2;</span><br><span class="line">｝</span><br><span class="line">half3 ShadeSH9 (half4 normal) ｛</span><br><span class="line">    &#x2F;&#x2F; Linear + constant polynomial terms</span><br><span class="line">    half3 res &#x3D; SHEvalLinearL0L1(normal);</span><br><span class="line">    &#x2F;&#x2F; Quadratic polynomials</span><br><span class="line">    res +&#x3D; SHEvalLinearL2(normal);</span><br><span class="line">    if (IsGammaSpace())</span><br><span class="line">        res &#x3D; LinearToGammaSpace(res);</span><br><span class="line">    return res;</span><br><span class="line">｝</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/28/AmbientOcclusion/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/11/28/AmbientOcclusion/" itemprop="url">AmbientOcclusion</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-11-28T00:25:05+08:00">
+                2020-11-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Global-Illumination/" itemprop="url" rel="index">
+                    <span itemprop="name">Global Illumination</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>环境光遮蔽的原理可以直接从渲染方程推导出来，对Lambertian表面，任意一个着色点p的渲染结果$L_o$是$\frac{c_{albedo}}{\pi}$和Irradiance的乘积，若假设在此着色点p的所有入射方向radiance为一常量$L_A$，也就是最简单的环境光Ambient Light，那么该点接受的Irradiance就为</p>
+<p>$E(p,n)=\int_{l \in \Omega}L_A (n·l)^+dl=\pi L_A$</p>
+<p>积分结果十分简单，不过有一些缺陷，这里并未考虑到着色点会被本模型的面片以及场景中其他模型面片的遮挡，若简单的假设面片被遮挡的方向入射radiance是0（实际上不是，有间接光照），未被遮挡的方向为$L_A$,设可见函数$v(p,l)$表明p点的l入射方向是否被遮挡，遮挡为0反之为1，那么Irradiance的积分就可以表示为：</p>
+<p>$E(p,n)=L_A\int_{l \in \Omega}v(p,l)(n·l)^+dl$</p>
+<p>定义遮蔽系数$k_A(p)$，代表点p未被遮蔽的入射方向百分比：</p>
+<p>$k_A(p)=\frac{1}{\pi}\int_{l \in \Omega}v(p,l)(n·l)^+dl$</p>
+<p>着色点的Irradiance就可以写成：</p>
+<p>$E(p,n)=\pi K_AL_A$</p>
+<p>除此之外，还可以使用BentNormal替代原来的法线取得更加精确的结果，BentNormal也就是未被遮蔽的平均方向。</p>
+<p>$n_{bent}=(\int_{l \in \Omega}l v(p,l)(n·l)^+dl).normalize$</p>
+<p><img src="/2020/11/28/AmbientOcclusion/BentNormal.png" alt="bentNormal"></p>
+<p>右图各点蓝色的方向就是该点的bent normal</p>
+<h2 id="Visibility-And-Obscurance"><a href="#Visibility-And-Obscurance" class="headerlink" title="Visibility And Obscurance"></a>Visibility And Obscurance</h2><p>可见函数$v(l)$只有二值01在实时渲染的某些情况下是不太行得通的。设想在一个6个面都封闭的房间内，任选一个方向都最终会与墙壁或者房间内的物体相交，按照二值01定义，那么所有点的遮蔽系数$k_A(p)$都应为0。</p>
+<p>(光线追踪可以递归跟踪得到被遮挡方向相交点的着色信息进而计算最终对当前着色点正确radiance的贡献，实时渲染无法得到)</p>
+<p>在这种情况下，使用不那么物理正确的定义却能得到更好的效果，计算$k_A$时用distance mapping function $\rho(l)$来替代$v(l)$，$\rho (l)$的定义为：<br>$$\rho (l) = \begin{cases}<br>0 &amp; {l与场景物体相交并且距离小于d_{max}} \<br>1 &amp; {未与物体相交或相交距离大于d_{max}}<br>\end{cases}$$</p>
+<p>$k_A$计算方式也就变成了：</p>
+<p>$k_A(p)=\frac{1}{\pi}\int_{l \in \Omega}\rho(p,l)(n·l)^+dl$</p>
+<p>使用$\rho (l)$代替$v(l)$的好处不仅在于不考虑自反射时渲染结果看起来更令人满意，还能起到加速计算的效果，超过$d_{max}$的物体可以不用参与遮蔽计算。</p>
+<p><img src="/2020/11/28/AmbientOcclusion/Obscurance.png" alt="obscurance"></p>
+<p>二值定义$v(l)$【左】与$\rho(l)$【右】的ao结果</p>
+<h2 id="Accounting-for-Interreflections"><a href="#Accounting-for-Interreflections" class="headerlink" title="Accounting for Interreflections"></a>Accounting for Interreflections</h2><p>环境光遮蔽与真正的全局光照最大的区别大于Interreflections(自反射)，计算遮蔽时将被遮挡的入射方向的radiance贡献算作0，实际上并不会是0，在离线渲染的着色中就会递归的计算视线路径上的所有着色点的radiance贡献，限于计算消耗，这样的方法并不能用在实时渲染上。</p>
+<p>不过好在有一些经验公式可以得到与全局光照接近的效果，替换遮蔽系数$k_A$为$k_A^·$</p>
+<p>$k_A^·=\frac{k_A}{1-c_{albedo}(1-k_A)}$</p>
+<p>可以理解为将ao系数适当的放大了一些，得到了类似考虑了自反射的效果。</p>
+<h2 id="Computation-Of-Ambient-Occlusion"><a href="#Computation-Of-Ambient-Occlusion" class="headerlink" title="Computation Of Ambient Occlusion"></a>Computation Of Ambient Occlusion</h2><p>可以简单划分为两类，预先使用离线光追的方式计算ao贴图在实时渲染中使用，或者使用不那么PhysicallyBased的低消耗算法，如SSAO等。</p>
+<h3 id="Precomputed"><a href="#Precomputed" class="headerlink" title="Precomputed"></a>Precomputed</h3><p>其实就是算一个数值积分式，可以通过蒙特卡洛方法进行数值积分运算：</p>
+<p>$k_A=\frac{1}{N}\sum_i^N v(l_i)(n·l_i)^+$</p>
+<p>通过此式对要着色的物体的顶点生成ao值存放在贴图中，渲染时就可以直接从贴图中取值即可。</p>
+<h3 id="Dynamic-Computation"><a href="#Dynamic-Computation" class="headerlink" title="Dynamic Computation"></a>Dynamic Computation</h3><p>比较基础且常见的就是SSAO了，以及其系列的衍生算法如HBAO…，这类算法的特点在于不那么物理正确，但在实时渲染中消耗较低，并且效果还算不错。后续该实现一下SSAO)</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/11/24/IrradianceEnvironmentMapping/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1087,7 +1574,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">18</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1098,7 +1585,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">8</span>
                   <span class="site-state-item-name">分类</span>
                 </a>
               </div>
