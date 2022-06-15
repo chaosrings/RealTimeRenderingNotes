@@ -79,15 +79,20 @@
 
 
 
+<meta name="description" content="ACT常有攻击动作后根据下一次输入时机和按键进行变招的设计,也就是常说的连招了.以游戏鬼泣5中的角色尼禄为例,普攻的时机不同会有不同的连招:  Red QueueCombo C 前两次短间隔输入攻击键停顿后再输入四次攻击键   Red QueueCombo D 前三次短间隔输入攻击键停顿后再输入攻击键  当然这个连击变招还可以更复杂一点,比如攻击后不仅会根据输入时机生成连击,还会根据输入键位的不同">
 <meta property="og:type" content="article">
 <meta property="og:title" content="UEACTCombo">
 <meta property="og:url" content="https://chaosrings.github.io/2022/06/14/UEACTCombo/index.html">
 <meta property="og:site_name" content="SomeNotes">
+<meta property="og:description" content="ACT常有攻击动作后根据下一次输入时机和按键进行变招的设计,也就是常说的连招了.以游戏鬼泣5中的角色尼禄为例,普攻的时机不同会有不同的连招:  Red QueueCombo C 前两次短间隔输入攻击键停顿后再输入四次攻击键   Red QueueCombo D 前三次短间隔输入攻击键停顿后再输入攻击键  当然这个连击变招还可以更复杂一点,比如攻击后不仅会根据输入时机生成连击,还会根据输入键位的不同">
 <meta property="og:locale">
+<meta property="og:image" content="https://chaosrings.github.io/2022/06/14/UEACTCombo/Combo2.png">
+<meta property="og:image" content="https://chaosrings.github.io/2022/06/14/UEACTCombo/Combo1.png">
 <meta property="article:published_time" content="2022-06-13T16:40:54.641Z">
-<meta property="article:modified_time" content="2022-06-13T16:42:32.596Z">
+<meta property="article:modified_time" content="2022-06-15T16:16:42.409Z">
 <meta property="article:author" content="chaosrings">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://chaosrings.github.io/2022/06/14/UEACTCombo/Combo2.png">
 
 
 
@@ -350,7 +355,23 @@
       
 
       
-        
+        <p>ACT常有攻击动作后根据下一次输入时机和按键进行变招的设计,也就是常说的连招了.以游戏鬼泣5中的角色尼禄为例,普攻的时机不同会有不同的连招:</p>
+<p><img src="/2022/06/14/UEACTCombo/Combo2.png"></p>
+<center>Red QueueCombo C 前两次短间隔输入攻击键停顿后再输入四次攻击键</center>
+
+<p><img src="/2022/06/14/UEACTCombo/Combo1.png"></p>
+<center>Red QueueCombo D 前三次短间隔输入攻击键停顿后再输入攻击键</center>
+
+<p>当然这个连击变招还可以更复杂一点,比如攻击后不仅会根据输入时机生成连击,还会根据输入键位的不同产生新的连击.</p>
+<p>这种多条件分支的连招形式,用数据结构中的树来描述是十分合适的.</p>
+<h2 id="ComboTree"><a href="#ComboTree" class="headerlink" title="ComboTree"></a>ComboTree</h2><p>上面的两个连招就可以用二叉树表示为:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">graph TD</span><br><span class="line">立于地面--&gt;|输入攻击|攻击动画1</span><br><span class="line">攻击动画1--&gt;|输入攻击|攻击动画2</span><br><span class="line">攻击动画2--&gt;|输入攻击|攻击动画3</span><br><span class="line">攻击动画2--&gt;|停顿后输入攻击|攻击动画5</span><br><span class="line">攻击动画5--&gt;|输入攻击|攻击动画6</span><br><span class="line">攻击动画6--&gt;|输入攻击|攻击动画7</span><br><span class="line">攻击动画7--&gt;|输入攻击|攻击动画8(Red QueueCombo C完成)</span><br><span class="line">攻击动画3--&gt;|停顿后输入攻击|攻击动画4(Red QueueCombo D完成)</span><br></pre></td></tr></table></figure>
+
+<p>一般而言,连击树有如下形式:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">graph TD</span><br><span class="line">Idle--&gt;|If Input Attack|FirstCombo</span><br><span class="line">FirstCombo--&gt;|If Meet Condition1|BranchCombo1</span><br><span class="line">FirstCombo--&gt;|If Meet Condition2|BranchCombo2</span><br><span class="line">BranchCombo1--&gt;...</span><br><span class="line">BranchCombo2--&gt;....</span><br></pre></td></tr></table></figure>
+
+<p>当我们把连招抽象成树的结构后,树的每个节点由什么组成呢?</p>
+<h3 id="ComboTreeNode"><a href="#ComboTreeNode" class="headerlink" title="ComboTreeNode"></a>ComboTreeNode</h3><h3 id="ComboCondition"><a href="#ComboCondition" class="headerlink" title="ComboCondition"></a>ComboCondition</h3>
       
     </div>
     
@@ -438,8 +459,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -490,6 +520,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ComboTree"><span class="nav-number">1.</span> <span class="nav-text">ComboTree</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ComboTreeNode"><span class="nav-number">1.1.</span> <span class="nav-text">ComboTreeNode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ComboCondition"><span class="nav-number">1.2.</span> <span class="nav-text">ComboCondition</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
