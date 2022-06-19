@@ -93,7 +93,7 @@
 <meta property="og:image" content="https://chaosrings.github.io/2022/06/11/UECamera/UpdateStack.png">
 <meta property="og:image" content="https://chaosrings.github.io/2022/06/11/UECamera/CameraShakeAndLensEffect.png">
 <meta property="article:published_time" content="2022-06-11T14:32:31.690Z">
-<meta property="article:modified_time" content="2022-06-13T15:53:24.521Z">
+<meta property="article:modified_time" content="2022-06-19T15:03:54.406Z">
 <meta property="article:author" content="chaosrings">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://chaosrings.github.io/2022/06/11/UECamera/CameraComponent.png">
@@ -353,12 +353,12 @@
 <h2 id="Point-Of-View"><a href="#Point-Of-View" class="headerlink" title="Point Of View"></a>Point Of View</h2><p>UE的相机模块有个关键的概念,Point Of View(POV),也就是玩家的视点,其中有位置,旋转,FOV,AspectRation等各种决定渲染变换矩阵的属性.</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">FMinimalViewInfo</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	FVector Location;</span><br><span class="line">	FRotator Rotation;</span><br><span class="line">	<span class="keyword">float</span> FOV;</span><br><span class="line">	<span class="keyword">float</span> DesiredFOV;</span><br><span class="line">	<span class="keyword">float</span> OrthoWidth;</span><br><span class="line">	<span class="keyword">float</span> OrthoNearClipPlane;</span><br><span class="line">	<span class="keyword">float</span> OrthoFarClipPlane;</span><br><span class="line">	<span class="keyword">float</span> AspectRatio;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>在游戏世界中,POV可能会有多个,但只有一个POV会成为ViewTarget,也就是最终的虚拟相机属性.更直白的说法就是,我可以在游戏世界中架设多台相机,但最终渲染结果只会用其中一个相机的摄影结果展示给玩家,这个ViewTarget的定义如下:</p>
+<p>在游戏世界中,POV可能会有多个,但只有一个POV会成为ViewTarget,也就是最终的虚拟相机属性.更直白的说法就是,可以在游戏世界中架设多台相机,但最终渲染结果只会用其中一个相机的摄影结果展示给玩家,这个ViewTarget的定义如下:</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">FTViewTarget</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    TObjectPtr&lt;AActor&gt; Target;</span><br><span class="line">    FMinimalViewInfo POV;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
 <h2 id="CameraComponent"><a href="#CameraComponent" class="headerlink" title="CameraComponent"></a>CameraComponent</h2><p><img src="/2022/06/11/UECamera/CameraComponent.png"></p>
-<p>CameraComponent提供了一个POV,一般而言作为ViewTarget的CameraComponent Location,Rotation,FOV等属性会直接传递给POV,可以看CameraComponet::GetCameraView()的实现:</p>
+<p>CameraComponent提供了一个POV,一般而言作为ViewTarget的CameraComponent Location,Rotation,FOV等属性会直接传递给POV,可以看引擎中对CameraComponet::GetCameraView()的实现:</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UCameraComponent::GetCameraView</span><span class="params">(<span class="keyword">float</span> DeltaTime, FMinimalViewInfo&amp; DesiredView)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    DesiredView.Location = GetComponentLocation();</span><br><span class="line">    DesiredView.Rotation = GetComponentRotation();</span><br><span class="line">    DesiredView.FOV = bUseAdditiveOffset ? (FieldOfView + AdditiveFOVOffset) : FieldOfView;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>第三人称游戏,通常会在玩家角色蓝图上添加CameraComponent,引擎会优先使用角色下的相机作为ViewTarget.</p>
