@@ -249,6 +249,186 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/12/04/SamplingInCG/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="SomeNotes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/12/04/SamplingInCG/" itemprop="url">SamplingInCG</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-12-04T00:00:18+08:00">
+                2020-12-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cgmath/" itemprop="url" rel="index">
+                    <span itemprop="name">cgmath</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="Inverse-Transform-Sampling"><a href="#Inverse-Transform-Sampling" class="headerlink" title="Inverse Transform Sampling"></a>Inverse Transform Sampling</h2><p>一个很重要的数学知识是逆变换采样，在算各种数值积分时会经常用到。众所周知计算机在生成随机数时只能生成均匀分布的随机数，但在进行重要性采样时需要得到密度函数$pdf(x)=f(x)$的采样分布，这里就需要用到逆变换采样。<br>具体的做法是</p>
+<ul>
+<li><p>求累计密度函数$F_X(x)$，也就是$\int_{-\infty}^{x}f(x)dx$</p>
+</li>
+<li><p>计算$F_X(x)$的反函数$F_X^{-1}(x)$</p>
+</li>
+<li><p>生成区间$[0,1]$内的均匀分布采样点$U_i$</p>
+</li>
+</ul>
+<ul>
+<li>计算$X_i=F_X^{-1}(U_i)$，$X_i$也就是密度函数为$f(x)$的分布</li>
+</ul>
+<p>ps:计算反函数$y=f(x)$，替换$xy$位置$x=f(y)$再次推导$y$的解析式就是反函数$f^{-1}(x)$了。</p>
+<p>证明过程为：</p>
+<p>设有分布$U$~$unif[0,1]$以及变换函数$T(U)=X$，经过变换后$X$满足累计密度函数$F_X(x)$，根据定义</p>
+<p>$F_X(x)=P(X\leqslant x)=P(T(U)\leqslant x)=P(U\leqslant T^{-1}(x))$</p>
+<p>而$U$是$[0,1]$内的均匀分布，$P(U\leqslant u)=u$，也就是$F_X(x)=P(U\leqslant T^{-1}(x))=T^{-1}(x)$</p>
+<p>$F_X(x)=T^{-1}(x)$也就是$T(x)=F_X^{-1}(x)$</p>
+<h2 id="Importance-Sampling"><a href="#Importance-Sampling" class="headerlink" title="Importance Sampling"></a>Importance Sampling</h2><p>重要性采样需要生成与密度函数分布相同的采样点，也可以通过逆变换采样的方式将随机生成的均匀分布采样点投影到指定的密度函数。</p>
+<p>以法线半球面均匀分布为例，其密度函数$pdf(h)=\frac{n·h}{\pi}$</p>
+<p>用球面坐标可以表示为$pdf(\theta,\phi)=\frac{cos\theta sin\theta}{\pi}$</p>
+<p>(这里可以理解为法线$n$是球坐标系的z轴，因此有$cos\theta=n·h$)</p>
+<p>$pdf_{\Theta}(\theta)=\int_0^{2\pi}pdf(\theta,\phi)d\phi=2cos\theta sin\theta$</p>
+<p>$cdf_{\Theta}(\theta)=sin^2\theta$</p>
+<p>$pdf_{\Phi|\Theta}(\phi|\theta)=\frac{pdf(\theta,\phi)}{pdf(\phi)}=\frac{1}{2\pi}$</p>
+<p>$cdf_{\Phi|\Theta}(\phi|\theta)=\frac{\phi}{2\pi}$</p>
+<p>计算得到$cdf_{\Theta}(\theta)$以及$cdf_{\Phi|\Theta}$，就可以使用逆变换采样了，用<a target="_blank" rel="noopener" href="https://blog.csdn.net/i_dovelemon/article/details/76599923">Hammersley</a>采样生成二维$[0,1]$均匀分布$X=(X_0,X_1)$</p>
+<p>$cdf_{\Phi|\Theta}^{-1}(\phi)=2\pi \phi$</p>
+<p>$\Phi_i=cdf_{\Phi|\Theta}^{-1}(X_0)=2\pi X_0$</p>
+<p>$cdf_{\Phi|\Theta}^{-1}(\theta)=arcsin\sqrt{\theta}$</p>
+<p>$\Theta_i=cdf_\Theta^{-1}(X_1)=arcsin\sqrt{X_1}$</p>
+<p>最终得到的$(\Theta_i,\Phi_i)$就是法线半球面均匀分布的采样点，可以用这些采样点来计算表面的Irradiance…</p>
+<p>PBR着色模型中的Specular BRDF类似，中间向量的分布密度函数$pdf(h)=D(h)(n·h)$，用球面坐标可以表示为$pdf(\theta,\phi)=D(h)cos\theta sin\theta=\frac{\alpha^2cos\theta sin\theta}{\pi(cos^2\theta(\alpha^2-1)+1)^2}$</p>
+<p>$pdf_{\Theta}(\theta)=\int_0^{2\pi}pdf(\theta,\phi)d\phi=\frac{2\alpha^2cos\theta sin\theta}{(cos^2\theta(\alpha^2-1)+1)^2}$</p>
+<p>$cdf_{\Theta}=\int_0^\theta pdf(\theta)d\theta=\frac{\alpha^2sin2\theta}{\pi((\alpha^2-1)cos^2\theta+1)^2}$</p>
+<p>$pdf_{\Phi|\Theta}(\phi|\theta)=\frac{pdf(\theta,\phi)}{pdf(\phi)}=\frac{1}{2\pi}$</p>
+<p>$cdf_{\Phi|\Theta}(\phi|\theta)=\frac{\phi}{2\pi}$</p>
+<p>$\Phi_i=cdf_{\Phi|\Theta}^{-1}(X_0)=2\pi X_0$</p>
+<p>$\Theta_i=cdf_\Theta^{-1}(X_1)=cos^{-1}\sqrt\frac{1-X_1}{(\alpha^4-1)X_1+1}$</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://chaosrings.github.io/2020/12/02/SpecularGlobalIllumination/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1574,7 +1754,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-count">19</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
