@@ -89,7 +89,7 @@
 <meta property="og:image" content="https://chaosrings.github.io/2022/06/21/UECharacterMovement/SimulateCorrectStart.png">
 <meta property="og:image" content="https://chaosrings.github.io/2022/06/21/UECharacterMovement/SimulateCorrectTick.png">
 <meta property="article:published_time" content="2022-06-21T14:21:45.486Z">
-<meta property="article:modified_time" content="2022-06-21T15:30:19.353Z">
+<meta property="article:modified_time" content="2022-06-21T15:32:00.679Z">
 <meta property="article:author" content="chaosrings">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://chaosrings.github.io/2022/06/21/UECharacterMovement/SimulateCorrectStart.png">
@@ -355,7 +355,7 @@
 
 <p>SmoothClientPosition_Interpolate会根据插值平滑的方式递减MeshTranslationOffset,线性插值是根据时间线性递减,指数插值则是指数递减直到变成FVector.Zero,也就是追上新位置.SmoothClientPosition_UpdateVisuals则是根据MeshTranslationOffset设置Mesh相对Character碰撞体的位置.</p>
 <p>总的来说是想实现这样的效果:</p>
-<p><video src="UECharacterMovement/shadow.mp4" type="video/mp4" controls="controls" width="50%" height="50%"> </video></p>
+<p><video src="https://github.com/chaosrings/SomeNotes/blob/master/source/_posts/UECharacterMovement/shadow.mp4?raw=true" type="video/mp4" controls="controls" width="50%" height="50%"> </video></p>
 <h2 id="PerformMovement"><a href="#PerformMovement" class="headerlink" title="PerformMovement"></a>PerformMovement</h2><p>一次在地面行走的堆栈:</p>
 <p>PerformMovement-&gt;StartNewPhysics-&gt;(可能分支)PhysWalking-&gt;(可能分支)-&gt;[CalcVelocity][SafeMoveUpdatedComponent]-&gt;MoveUpdatedComponent-&gt;USceneComponent::MoveComponent</p>
 
