@@ -339,10 +339,10 @@
 
 <p>设想这样一种情况，某个时刻玩家释放主动技能，这个主动技能的效果是立刻发射出一颗带轨迹的子弹，但在这个时刻，服务器认为该角色已经被其他玩家冰冻了，不应该释放技能。如果不做任何处理，权威服务器会命令本地客户端回滚技能效果。</p>
 <p>从主动技能释放，到最终被服务器的RPC纠正回滚，至少会有一个RTT的延时，如果在这段时间内这个子弹命中了敌人，就会有本地客户端观察到子弹命中了，但却没有照成伤害。</p>
-<h3 id="服务器先行"><a href="#服务器先行" class="headerlink" title="服务器先行"></a>服务器先行</h3><p>服务器先行则是释放技能后,客户端并不立刻执行技能逻辑,而是发送RPC请求到服务器,等待服务器校验通过并通知客户端可以释放,本地客户端才执行技能逻辑(对应Unreal Gameplay Ability System的GameplayAbility::NetExecutionPolicy::ServerInitiated).</p>
+<h3 id="服务器启动"><a href="#服务器启动" class="headerlink" title="服务器启动"></a>服务器启动</h3><p>服务器启动则是释放技能后,客户端并不立刻执行技能逻辑,而是发送RPC请求到服务器,等待服务器校验通过并通知客户端可以释放,本地客户端才执行技能逻辑(对应Unreal Gameplay Ability System的GameplayAbility::NetExecutionPolicy::ServerInitiated).</p>
 <p><img src="/2022/07/09/OnlineGameplay/ServerInitiated.png"></p>
 <p>这样做的优势在于,客户端等待服务器的确认才能释放技能,技能逻辑不会出现与本地预表现那样逻辑不一致的情况.但是缺点也很明显,玩家从输入释放技能到最终看到技能的表现,中间至少有一个RTT的延时,手感通常较差.</p>
-<p>根据个人的经验,蓄力释放的技能使用服务器先行的方式是较为合适的,客户端RPC通知服务器开始蓄力,服务器RPC通知客户端释放技能的延时感受都会被融合在蓄力中.</p>
+<p>根据个人的经验,蓄力释放的技能使用服务器启动的方式是较为合适的,客户端RPC通知服务器开始蓄力,服务器RPC通知客户端释放技能的延时感受都会被融合在蓄力中.</p>
 <h3 id="更复杂的模式"><a href="#更复杂的模式" class="headerlink" title="更复杂的模式"></a>更复杂的模式</h3><p>实际的开发中仅使用上述模式并不能处理所有的Gameplay,Bungie在GDC <a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=h47zZrqjgLc">Halo中的联机Gameplay</a>中提到了一个无敌护盾的例子:</p>
 <p><img src="/2022/07/09/OnlineGameplay/ArmorLock.png"></p>
 <p>这个技能的效果是在短暂的准备动画后,角色身上添加护盾特效并进入无敌状态.</p>
@@ -353,7 +353,7 @@
 </ul>
 <p>不过这样实现是有问题的,如果在服务器播放动画期间受到了伤害,很有可能会导致客户端本地已经播放了护盾特效表明进入无敌状态,但还是能受到敌方的伤害.</p>
 <p><img src="/2022/07/09/OnlineGameplay/Halo_PreSimulate.png"></p>
-<p>那么为了逻辑保持一致,是否应该使用服务器先行的模式? Bungie指出这也不是一个最优解,在播放完准备动画后,玩家至少需要等待1个RTT的延迟才能看到自己身上添加了护盾特效:</p>
+<p>那么为了逻辑保持一致,是否应该使用服务器启动的模式? Bungie指出这也不是一个最优解,在播放完准备动画后,玩家至少需要等待1个RTT的延迟才能看到自己身上添加了护盾特效:</p>
 <p><img src="/2022/07/09/OnlineGameplay/Halo_ServerInitiated.png"></p>
 <p>最终Bungie的解决方式是该技能本地客户端执行动画前摇,服务器则缩短前摇时长到1个RTT:</p>
 <p><img src="/2022/07/09/OnlineGameplay/Halo_FinalSolution.png"></p>
@@ -362,7 +362,12 @@
 <li>如果在服务器进入无敌后受到攻击,无论客户端正在播放准备动画还是激活了护盾特效,角色都不会受到伤害,技能效果表现与逻辑达成一致.</li>
 </ul>
 <h3 id="一点理解"><a href="#一点理解" class="headerlink" title="一点理解"></a>一点理解</h3><p>总的来说技能的联机实现没有一个通用的解法能够处理所有情况,更多的是根据需要选择不同的方案,或是对通用解法进行优化,掩盖其缺点.</p>
-<h2 id="Buff"><a href="#Buff" class="headerlink" title="Buff"></a>Buff</h2>
+<h2 id="Buff"><a href="#Buff" class="headerlink" title="Buff"></a>Buff</h2><p>玩家对角色移动,技能特效这些的延时比较敏感.但对于大部分逻辑都是修正属性的Buff来说却不是那么敏感.因此一个简单却好用的实现方式就是客户端完全听从服务器对Buff的添加和移除:</p>
+<p><img src="/2022/07/09/OnlineGameplay/BuffAdd.png"></p>
+<p><img src="/2022/07/09/OnlineGameplay/BuffRemove.png"></p>
+<p>不过Unreal在GAS中对Gameplay Effect也进行了预表现:</p>
+<p><img src="/2022/07/09/OnlineGameplay/GASPredict.png"></p>
+
           
         
       
