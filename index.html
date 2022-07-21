@@ -268,7 +268,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2022/07/09/OnlineGameplay/" itemprop="url">未命名</a></h1>
+                <a class="post-title-link" href="/2022/07/09/OnlineGameplay/" itemprop="url">联机GamePlay</a></h1>
         
 
         <div class="post-meta">
@@ -290,6 +290,28 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/network/" itemprop="url" rel="index">
+                    <span itemprop="name">network</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -324,7 +346,8 @@
 <p>无论是主动技能还是被动技能,通常都是由多个游戏逻辑组合而成,譬如一个技能会让角色播放动画,对命中的敌人造成伤害,给自己添加Buff…这些逻辑在游戏世界中通常需要一个逻辑承载体，在项目中这个承载体是AGE Action， Unreal的Gameplay Ability System框架下这个承载体是Gameplay Ability。程序实现Gameplay的原子（接口）提供给承载体，策划使用这些接口来实现最终的主动技能效果。</p>
 <p>如果是单机模式，释放一个技能只需要将这个逻辑承载体创建在场景中并执行。</p>
 <p>联机模式下，技能就需要根据情况选择不同的处理模式：</p>
-<h3 id="本地预表现"><a href="#本地预表现" class="headerlink" title="本地预表现"></a>本地预表现</h3><p>技能的预表现与移动的预表现逻辑类似，先在本地客户端执行技能逻辑，再把释放技能的指令发送到权威服务器进行校验(对应Unreal Gameplay Ability System的GameplayAbility::NetExecutionPolicy::LocalPredicted).</p>
+<h3 id="本地预表现"><a href="#本地预表现" class="headerlink" title="本地预表现"></a>本地预表现</h3><p>a</p>
+<p>技能的预表现与移动的预表现逻辑类似，先在本地客户端执行技能逻辑，再把释放技能的指令发送到权威服务器进行校验(对应Unreal Gameplay Ability System的GameplayAbility::NetExecutionPolicy::LocalPredicted).</p>
 <ul>
 <li>如果校验成功可以释放技能，那么就在服务器上执行技能逻辑，并用RPC通知其他客户端该角色释放了技能，在其他的客户端上也执行技能逻辑。</li>
 </ul>
@@ -343,6 +366,7 @@
 <p><img src="/2022/07/09/OnlineGameplay/ServerInitiated.png"></p>
 <p>这样做的优势在于,客户端等待服务器的确认才能释放技能,技能逻辑不会出现与本地预表现那样逻辑不一致的情况.但是缺点也很明显,玩家从输入释放技能到最终看到技能的表现,中间至少有一个RTT的延时,手感通常较差.</p>
 <p>根据个人的经验,蓄力释放的技能使用服务器启动的方式是较为合适的,客户端RPC通知服务器开始蓄力,服务器RPC通知客户端释放技能的延时感受都会被融合在蓄力中.</p>
+<p>被动触发的技能通常也是使用服务器启动的方式来实现,服务器上触发被动技能后再通知客户端触发技能.</p>
 <h3 id="更复杂的模式"><a href="#更复杂的模式" class="headerlink" title="更复杂的模式"></a>更复杂的模式</h3><p>实际的开发中仅使用上述模式并不能处理所有的Gameplay,Bungie在GDC <a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=h47zZrqjgLc">Halo中的联机Gameplay</a>中提到了一个无敌护盾的例子:</p>
 <p><img src="/2022/07/09/OnlineGameplay/ArmorLock.png"></p>
 <p>这个技能的效果是在短暂的准备动画后,角色身上添加护盾特效并进入无敌状态.</p>
@@ -365,7 +389,7 @@
 <h2 id="Buff"><a href="#Buff" class="headerlink" title="Buff"></a>Buff</h2><p>玩家对角色移动,技能特效这些的延时比较敏感.但对于大部分逻辑都是修正属性的Buff来说却不是那么敏感.因此一个简单却好用的实现方式就是客户端完全听从服务器对Buff的添加和移除:</p>
 <p><img src="/2022/07/09/OnlineGameplay/BuffAdd.png"></p>
 <p><img src="/2022/07/09/OnlineGameplay/BuffRemove.png"></p>
-<p>不过Unreal在GAS中对Gameplay Effect也进行了预表现:</p>
+<p>不过Unreal在GAS中对Gameplay Effect也进行了预表现,下面是前人对GAS联机模式的同步流程梳理:</p>
 <p><img src="/2022/07/09/OnlineGameplay/GASPredict.png"></p>
 
           
